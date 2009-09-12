@@ -21,6 +21,12 @@
 Game = {}
 
 function Game.load()
+love.filesystem.require("map.lua")
+examplemap()
+
+love.graphics.setBackgroundColor(0,0,48)
+love.graphics.setColor(0,160,160)
+love.graphics.setLine(2)
 end
 
 function Game.update(dt)
@@ -28,6 +34,7 @@ end
 
 
 function Game.draw()
+drawmap(Map)
 end
 
 
