@@ -47,7 +47,7 @@ end
 function drawpath( p )
 	local i,v
 	if not p then return end
-	local dx,dy = Map.cell_w,Map.cell_h
+	local dx,dy = Cell.width,Cell.height
 	for i,v in ipairs(p) do 
 		love.graphics.setColor(188,168,0)
 		love.graphics.rectangle( love.draw_fill , (v[1]-1)*dx+1,(v[2]-1)*dy+1,dx-1,dy-1 ) 
@@ -96,7 +96,7 @@ function Game.mousepressed(x, y, button)
 --~ 	local dy = math.floor(screensize[2]/Map.vcells)
 --~ 	-- force square
 --~ 	dx = dy 
-	local dx,dy = Map.cell_w,Map.cell_h
+	local dx,dy = Cell.width,Cell.height
 	local cx = math.floor(x/dx)+1
 	local cy = math.floor(y/dy)+1
 	local lx = x%dx

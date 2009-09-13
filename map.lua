@@ -22,10 +22,13 @@ Map={}
 	
 Map.hcells = 20
 Map.vcells = 20
-Map.cell_w = math.floor(screensize[1]/Map.hcells)
-Map.cell_h= math.floor(screensize[2]/Map.vcells)
--- force square
-Map.cell_w = Map.cell_h 
+
+Cell = { 
+	width = math.floor(screensize[1]/Map.hcells),
+	height = math.floor(screensize[2]/Map.vcells)
+}
+-- force square 
+Cell.width = Cell.height
  
 
 function examplemap()
@@ -64,7 +67,7 @@ function drawmap(map)
 	local i,j
 --~ 	local dx=screensize[1]/Map.hcells
 --~ 	local dy=screensize[2]/Map.vcells
-	local dx,dy = Map.cell_w,Map.cell_h
+	local dx,dy = Cell.width,Cell.height
 --~ 	dx = dy
 	for i=1,Map.hcells do
 		for j=1,Map.vcells do
