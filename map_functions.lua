@@ -1,10 +1,11 @@
 function saveMap( map )
 	local mapString = "Map = {\n" ..
-		"hcells =" .. map.hcells .. ",\nvcells = " .. map.vcells .. ",\n"
+		"hcells = " .. map.hcells .. ",\nvcells = " .. map.vcells .. ",\n"
 
 	local corridor -- for translating true/false to string
 
 	for i=1, map.hcells do
+		mapString = mapString .. "{\n"
 		for j=1, map.vcells do
 			if map[i][j].corridor then
 				corridor = "true"
@@ -17,6 +18,7 @@ function saveMap( map )
 			"r = " .. map[i][j].r .. ",\n" ..
 			"corridor = " .. corridor .. ",\n},"
 		end
+		mapString = mapString .. "},"
 	end
 	mapString = mapString .. "\n}"
 	local date = os.date("%Y-%m-%d-%H-%M-%S")
