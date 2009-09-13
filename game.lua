@@ -22,11 +22,16 @@ Game = {}
 
 function Game.load()
 	love.filesystem.require("map.lua")
+	love.filesystem.require("routefinder.lua")
 	examplemap()
 
 	love.graphics.setBackgroundColor(0,0,48)
 	love.graphics.setColor(0,160,160)
 	love.graphics.setLine(2)
+	
+	-- 1 edit
+	-- 2 move guy
+	gamemode = 1
 end
 
 function Game.update(dt)
@@ -35,7 +40,15 @@ end
 
 function Game.draw()
 	drawmap(Map)
+	drawpath(path)
 	drawscanlines()
+end
+
+function drawpath( p )
+	if not p then return end
+	for i,v in ipairs(p) do 
+		
+	end
 end
  
 function drawscanlines()
@@ -52,6 +65,14 @@ end
 function Game.keypressed(key)
 	if key == love.key_escape then
 		love.system.exit()
+	end
+	
+	if key == love.key_s then
+		saveMap( Map )
+	end
+	
+	if key == love.key_l then
+		loadMap( maps.lines )
 	end
 end
 
@@ -80,137 +101,146 @@ function Game.mousepressed(x, y, button)
 		return
 	end
 	
-	if love.keyboard.isDown(love.key_lshift) and button == love.mouse_left then
-		Map[cx][cy].corridor = not Map[cx][cy].corridor
-		return
-	end
+	if gamemode == 1 then
 	
-	if lx>ly and (dx-lx)>ly then -- upper wall
-		-- switch wall
-		if button == love.mouse_left then
-			if Map[cx][cy].u == 0 then
-				Map[cx][cy].u = 1
-				if cy>1 then
-					Map[cx][cy-1].d = 1
+		if love.keyboard.isDown(love.key_lshift) and button == love.mouse_left then
+			Map[cx][cy].corridor = not Map[cx][cy].corridor
+			return
+		end
+		
+		if lx>ly and (dx-lx)>ly then -- upper wall
+			-- switch wall
+			if button == love.mouse_left then
+				if Map[cx][cy].u == 0 then
+					Map[cx][cy].u = 1
+					if cy>1 then
+						Map[cx][cy-1].d = 1
+					end
+				else
+					Map[cx][cy].u = 0
+					if cy>1 then
+						Map[cx][cy-1].d = 0
+					end
 				end
-			else
-				Map[cx][cy].u = 0
-				if cy>1 then
-					Map[cx][cy-1].d = 0
+			end
+			
+			-- switch door
+			if button == love.mouse_right then
+				if Map[cx][cy].u == 2 then
+					Map[cx][cy].u = 3
+					if cy>1 then
+						Map[cx][cy-1].d = 3
+					end
+				else
+					Map[cx][cy].u = 2
+					if cy>1 then
+						Map[cx][cy-1].d = 2
+					end
 				end
 			end
 		end
 		
-		-- switch door
-		if button == love.mouse_right then
-			if Map[cx][cy].u == 2 then
-				Map[cx][cy].u = 3
-				if cy>1 then
-					Map[cx][cy-1].d = 3
-				end
-			else
-				Map[cx][cy].u = 2
-				if cy>1 then
-					Map[cx][cy-1].d = 2
+		
+		if lx>ly and (dx-lx)<=ly then -- right wall
+			-- switch wall
+			if button == love.mouse_left then
+				if Map[cx][cy].r == 0 then
+					Map[cx][cy].r = 1
+					if cx<Map.hcells then
+						Map[cx+1][cy].l = 1
+					end
+				else
+					Map[cx][cy].r = 0
+					if cx<Map.hcells then
+						Map[cx+1][cy].l = 0
+					end
 				end
 			end
-		end
-	end
-	
-	
-	if lx>ly and (dx-lx)<=ly then -- right wall
-		-- switch wall
-		if button == love.mouse_left then
-			if Map[cx][cy].r == 0 then
-				Map[cx][cy].r = 1
-				if cx<Map.hcells then
-					Map[cx+1][cy].l = 1
-				end
-			else
-				Map[cx][cy].r = 0
-				if cx<Map.hcells then
-					Map[cx+1][cy].l = 0
+			
+			-- switch door
+			if button == love.mouse_right then
+				if Map[cx][cy].r == 2 then
+					Map[cx][cy].r = 3
+					if cx<Map.hcells then
+						Map[cx+1][cy].l = 3
+					end
+				else
+					Map[cx][cy].r = 2
+					if cx<Map.hcells then
+						Map[cx+1][cy].l = 2
+					end
 				end
 			end
 		end
 		
-		-- switch door
-		if button == love.mouse_right then
-			if Map[cx][cy].r == 2 then
-				Map[cx][cy].r = 3
-				if cx<Map.hcells then
-					Map[cx+1][cy].l = 3
+		if lx<ly and  lx<=(dy-ly) then -- left wall
+			-- switch wall
+			if button == love.mouse_left then
+				if Map[cx][cy].l == 0 then
+					Map[cx][cy].l = 1
+					if cx>1 then
+						Map[cx-1][cy].r = 1
+					end
+				else
+					Map[cx][cy].l = 0
+					if cx>1 then
+						Map[cx-1][cy].r = 0
+					end
 				end
-			else
-				Map[cx][cy].r = 2
-				if cx<Map.hcells then
-					Map[cx+1][cy].l = 2
+			end
+			
+			-- switch door
+			if button == love.mouse_right then
+				if Map[cx][cy].l == 2 then
+					Map[cx][cy].l = 3
+					if cx>1 then
+						Map[cx-1][cy].r = 3
+					end
+				else
+					Map[cx][cy].l = 2
+					if cx>1 then
+						Map[cx-1][cy].r = 2
+					end
 				end
 			end
 		end
+		if lx<ly and lx>(dy-ly) then -- down wall
+			-- switch wall
+			if button == love.mouse_left then
+				if Map[cx][cy].d == 0 then
+					Map[cx][cy].d = 1
+					if cy<Map.vcells then
+						Map[cx][cy+1].u = 1
+					end
+				else
+					Map[cx][cy].d = 0
+					if cy<Map.vcells then
+						Map[cx][cy+1].u = 0
+					end
+				end
+			end
+			
+			-- switch door
+			if button == love.mouse_right then
+				if Map[cx][cy].d == 2 then
+					Map[cx][cy].d = 3
+					if cy<Map.vcells then
+						Map[cx][cy+1].u = 3
+					end
+				else
+					Map[cx][cy].d = 2
+					if cy<Map.vcells then
+						Map[cx][cy+1].u = 2
+					end
+				end
+			end
+		end
+	
 	end
 	
-	if lx<ly and  lx<=(dy-ly) then -- left wall
-		-- switch wall
-		if button == love.mouse_left then
-			if Map[cx][cy].l == 0 then
-				Map[cx][cy].l = 1
-				if cx>1 then
-					Map[cx-1][cy].r = 1
-				end
-			else
-				Map[cx][cy].l = 0
-				if cx>1 then
-					Map[cx-1][cy].r = 0
-				end
-			end
-		end
-		
-		-- switch door
-		if button == love.mouse_right then
-			if Map[cx][cy].l == 2 then
-				Map[cx][cy].l = 3
-				if cx>1 then
-					Map[cx-1][cy].r = 3
-				end
-			else
-				Map[cx][cy].l = 2
-				if cx>1 then
-					Map[cx-1][cy].r = 2
-				end
-			end
-		end
-	end
-	if lx<ly and lx>(dy-ly) then -- down wall
-		-- switch wall
-		if button == love.mouse_left then
-			if Map[cx][cy].d == 0 then
-				Map[cx][cy].d = 1
-				if cy<Map.vcells then
-					Map[cx][cy+1].u = 1
-				end
-			else
-				Map[cx][cy].d = 0
-				if cy<Map.vcells then
-					Map[cx][cy+1].u = 0
-				end
-			end
-		end
-		
-		-- switch door
-		if button == love.mouse_right then
-			if Map[cx][cy].d == 2 then
-				Map[cx][cy].d = 3
-				if cy<Map.vcells then
-					Map[cx][cy+1].u = 3
-				end
-			else
-				Map[cx][cy].d = 2
-				if cy<Map.vcells then
-					Map[cx][cy+1].u = 2
-				end
-			end
-		end
+	if gamemode == 2 then
+		if not currentpos then currentpos = {cx,cy} end
+		mypath = find_route( currentpos, {cx,cy}, Map )
 	end
 end
 
