@@ -53,6 +53,9 @@ function Game.keypressed(key)
 	if key == love.key_escape then
 		love.system.exit()
 	end
+	if key == love.key_s then
+		saveMap(Map)
+	end
 end
 
 
