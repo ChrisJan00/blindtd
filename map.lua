@@ -26,7 +26,7 @@ Map.cell_w = math.floor(screensize[1]/Map.hcells)
 Map.cell_h= math.floor(screensize[2]/Map.vcells)
 -- force square
 Map.cell_w = Map.cell_h 
-
+ 
 
 function examplemap()
 local i,j

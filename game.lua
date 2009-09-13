@@ -37,11 +37,11 @@ function Game.draw()
 	drawmap(Map)
 	drawscanlines()
 end
-
+ 
 function drawscanlines()
 	local i
 	local shalf = math.floor( screensize[2]/2)
-	love.graphics.setColor(0,0,128)
+	love.graphics.setColor(0,0,0,128)
 	love.graphics.setLine(1,love.line_rough )
 	for i=1,shalf do
 		love.graphics.line(0,i*2-1,screensize[1],i*2-1)
@@ -52,9 +52,6 @@ end
 function Game.keypressed(key)
 	if key == love.key_escape then
 		love.system.exit()
-	end
-	if key == love.key_s then
-		saveMap(Map)
 	end
 end
 
