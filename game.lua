@@ -40,14 +40,17 @@ end
 
 function Game.draw()
 	drawmap(Map)
-	drawpath(path)
+	drawpath(mypath)
 	drawscanlines()
 end
 
 function drawpath( p )
+	local i,v
 	if not p then return end
+	local dx,dy = Map.cell_w,Map.cell_h
 	for i,v in ipairs(p) do 
-		
+		love.graphics.setColor(188,168,0)
+		love.graphics.rectangle( love.draw_fill , (v[1]-1)*dx+1,(v[2]-1)*dy+1,dx-1,dy-1 ) 
 	end
 end
  
@@ -73,6 +76,11 @@ function Game.keypressed(key)
 	
 	if key == love.key_l then
 		loadMap( maps.lines )
+	end
+	
+	if key == love.key_e then
+		gamemode = gamemode + 1
+		if gamemode > 2 then gamemode = 1 end
 	end
 end
 
@@ -241,6 +249,7 @@ function Game.mousepressed(x, y, button)
 	if gamemode == 2 then
 		if not currentpos then currentpos = {cx,cy} end
 		mypath = find_route( currentpos, {cx,cy}, Map )
+		currentpos = {cx,cy}
 	end
 end
 
