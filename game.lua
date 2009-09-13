@@ -72,7 +72,7 @@ function Game.keypressed(key)
 	end
 	
 	if key == love.key_l then
-		loadMap( maps.lines )
+		openMap( "lines" )
 	end
 end
 

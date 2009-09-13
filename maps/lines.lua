@@ -1,4 +1,4 @@
-Map = {
+maps.lines = {
 hcells =20,
 vcells = 20,
 {

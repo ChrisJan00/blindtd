@@ -20,8 +20,11 @@ function load()
 
 	-- Dependencies
 	love.filesystem.require("game.lua")
-	love.filesystem.require("savemap.lua")
+	love.filesystem.require("map_functions.lua")
 
+	-- Maps
+	maps = {}
+	loadMap("lines")
 	-- Initialization
 	start_time = love.timer.getTime()
 
