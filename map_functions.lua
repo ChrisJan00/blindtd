@@ -25,3 +25,11 @@ function saveMap( map )
 	love.filesystem.write(file, mapString)
 	love.filesystem.close(file)
 end
+
+function loadMap( mapName )
+	love.filesystem.require("maps/" .. mapName .. ".lua")
+end
+
+function openMap( map )
+	Map = map
+end
