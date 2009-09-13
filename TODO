@@ -1,1 +1,9 @@
 - scanline impact check (loop of lines VS static image)
+- change map size in screen
+- (radar) animation of the guy walking in the screen
+- door animation (open/close)
+- door states: open (normal), closed (normal), open broken unknown, close broken unknown, open broken known, close broken known
+- in its normal state, the door is closed-normal.  When the guy approaches, it opens automatically and closes behind him
+- some doors are damaged from the start.. they stay open or closed and cannot change modus.  At first the player does not know, so they appear in the map as "normal".  When the player approaches, the door will change to its real status, because the user activated the sensor (the idea is that the door sensor sees the guy and tries to "open" but it can't because it's broken, so it changes to "broken closed", and viceversa  for "broken open")
+- The player can damage a door and force it closed (block it).  In theory by "damaging the door control circuit panel".  Then the door is displayed as blocked.  The aliens will break doors open:  if the door was opening then it's fine, but if it was blocked, they will break through... the map will display a broken open door.
+- If somebody is hitting a door, it will blink in the indicator (because it was probably already blocked, so it was red).  After some moments the aliens break through, so it changes to broken-open.
