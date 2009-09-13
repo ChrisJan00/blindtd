@@ -12,13 +12,13 @@ function saveMap( map )
 			else
 				corridor = "false"
 			end
-			mapString = mapString .. "{\n" .. "u = " .. map[i][j].u .. ",\n" ..
-			"d = " .. map[i][j].d .. ",\n" ..
-			"l = " .. map[i][j].l .. ",\n" ..
-			"r = " .. map[i][j].r .. ",\n" ..
-			"corridor = " .. corridor .. ",\n},"
+			mapString = mapString .. " {\n" .. "  u = " .. map[i][j].u .. ",\n" ..
+			"  d = " .. map[i][j].d .. ",\n" ..
+			"  l = " .. map[i][j].l .. ",\n" ..
+			"  r = " .. map[i][j].r .. ",\n" ..
+			"  corridor = " .. corridor .. ",\n},"
 		end
-		mapString = mapString .. "},"
+		mapString = mapString .. " },\n"
 	end
 	mapString = mapString .. "\n}"
 	local date = os.date("%Y-%m-%d-%H-%M-%S")
