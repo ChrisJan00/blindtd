@@ -246,7 +246,7 @@ function Game.mousepressed(x, y, button)
 	
 	end
 	
-	if gamemode == 2 then
+	if gamemode == 2 and Map[cx][cy].corridor and button == love.mouse_left then
 		if not currentpos then currentpos = {cx,cy} end
 		mypath = find_route( currentpos, {cx,cy}, Map )
 		currentpos = {cx,cy}
