@@ -60,6 +60,7 @@ end
 end
 
 function drawmap(map)
+	love.graphics.setLine(2, love.line_rough)
 	local i,j
 --~ 	local dx=screensize[1]/Map.hcells
 --~ 	local dy=screensize[2]/Map.vcells
