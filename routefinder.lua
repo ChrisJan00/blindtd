@@ -26,10 +26,47 @@ function table_indexOf(table, value)
 	return nil
 end
 
--- find the first ocurrence of element wich fund(element.value) computes true
+-- find the first ocurrence of element which func(element.value) computes true
 function table_indexOfFn(table, func)
 	for i,v in ipairs(table) do if func(v) then return i end end
 	return nil
+end
+
+-- returns the square of the distance
+function distanceSq(a,b)
+	local dx = b[1]-a[1]
+	local dy = b[2]-a[2]
+	return (dx*dx+dy*dy)
+end
+
+-- sorts the elements of the given table between given indices
+function sort_subtable( list, startIndex, endIndex, func)
+	local tmp = {}
+	for i=startIndex,endIndex do table.insert(tmp,list[i]) end
+	table.sort(tmp,func)
+	for i=startIndex,endIndex do list[i]=tmp[i-startIndex+1] end
+end
+
+-- returns a list with the ordinals of a random permutation of length len
+function permutation( len )
+	used = {}
+	seq = {}
+	for i=1,len do
+		used[i]=0
+	end
+	for i=1,len do
+		newnum = math.random(len-i+1)
+		j=0
+		while newnum>0 do
+			j=j+1
+			if used[j]==0 then
+				newnum = newnum-1
+			end
+		end
+		used[j]=1
+		seq[i]=j
+	end
+	return seq
 end
 
 function find_route(from, to, map)
@@ -39,7 +76,7 @@ function find_route(from, to, map)
 	local found = false
 	
 	-- push starting pos
-	routeslist[push_ndx] = {{from[1],from[2]},{from[1],from[2]}}
+	routeslist[push_ndx] = {{from[1],from[2]},{from[1],from[2]},distanceSq(from,to)}
 	push_ndx = push_ndx + 1
 	
 	while push_ndx ~= pop_ndx do
@@ -52,33 +89,44 @@ function find_route(from, to, map)
 			found = true
 			break 
 		end
-		  
+		
+			local push_order = permutation(4)
+			
 		  -- generate neighbours
+		  while table.getn(push_order) > 0 do
+		  local nexttopush = push_order[1]
+		  table.remove(push_order,1)
+		  
 		  -- up
-		  if elem[2]>1 and (map[elem[1]][elem[2]].u==1 or map[elem[1]][elem[2]].u==2) 
+		  if nexttopush==1 and elem[2]>1 and (map[elem[1]][elem[2]].u==1 or map[elem[1]][elem[2]].u==2) 
 			and not table_indexOfFn(routeslist,function(x) return (x[1][1]==elem[1] and x[1][2]==elem[2]-1) end ) then
-			routeslist[push_ndx] = {{elem[1],elem[2]-1},{elem[1],elem[2]}}
+			routeslist[push_ndx] = {{elem[1],elem[2]-1},{elem[1],elem[2]},distanceSq({elem[1],elem[2]-1},to)}
 			push_ndx = push_ndx + 1
 		  end	
 		-- down
-		  if elem[2]<map.vcells and (map[elem[1]][elem[2]].d==1 or map[elem[1]][elem[2]].d==2) 
+		  if nexttopush==2 and elem[2]<map.vcells and (map[elem[1]][elem[2]].d==1 or map[elem[1]][elem[2]].d==2) 
 			and not table_indexOfFn(routeslist,function(x) return (x[1][1]==elem[1] and x[1][2]==elem[2]+1) end ) then
-			routeslist[push_ndx] = {{elem[1],elem[2]+1},{elem[1],elem[2]}}
+			routeslist[push_ndx] = {{elem[1],elem[2]+1},{elem[1],elem[2]},distanceSq({elem[1],elem[2]+1},to)}
 			push_ndx = push_ndx + 1
 		  end
 		-- left
-		  if elem[1]>1 and (map[elem[1]][elem[2]].l==1 or map[elem[1]][elem[2]].l==2) 
+		  if nexttopush==3 and elem[1]>1 and (map[elem[1]][elem[2]].l==1 or map[elem[1]][elem[2]].l==2) 
 			and not table_indexOfFn(routeslist,function(x) return (x[1][1]==elem[1]-1 and x[1][2]==elem[2]) end ) then
-			routeslist[push_ndx] = {{elem[1]-1,elem[2]},{elem[1],elem[2]}}
+			routeslist[push_ndx] = {{elem[1]-1,elem[2]},{elem[1],elem[2]},distanceSq({elem[1]-1,elem[2]},to)}
 			push_ndx = push_ndx + 1
 		  end
 		-- right
-		  if elem[1]<map.hcells and (map[elem[1]][elem[2]].r==1 or map[elem[1]][elem[2]].r==2) 
+		  if nexttopush==4 and elem[1]<map.hcells and (map[elem[1]][elem[2]].r==1 or map[elem[1]][elem[2]].r==2) 
 			and not table_indexOfFn(routeslist,function(x) return (x[1][1]==elem[1]+1 and x[1][2]==elem[2]) end ) then
-			routeslist[push_ndx] = {{elem[1]+1,elem[2]},{elem[1],elem[2]}}
+			routeslist[push_ndx] = {{elem[1]+1,elem[2]},{elem[1],elem[2]},distanceSq({elem[1]+1,elem[2]},to)}
 			push_ndx = push_ndx + 1
 		  end
+		  
+		end
 	  
+		-- sort remaining elements by distance
+		sort_subtable( routeslist, pop_ndx, push_ndx, function(x,y) return (x[3]<y[3]) end )
+		
 	end
 	
 	-- if we reached destination, reconstruct path backwards
