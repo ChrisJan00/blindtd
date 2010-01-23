@@ -24,6 +24,7 @@ function Game.load()
 	love.filesystem.require("map.lua")
 	love.filesystem.require("routefinder.lua")
 	examplemap()
+	Map = generateMap()
 
 	love.graphics.setBackgroundColor(0,0,48)
 	love.graphics.setColor(0,160,160)
@@ -31,7 +32,7 @@ function Game.load()
 	
 	-- 1 edit
 	-- 2 move guy
-	gamemode = 1
+	gamemode = 2
 end
 
 function Game.update(dt)

@@ -17,8 +17,7 @@
 --     You should have received a copy of the GNU General Public License
 --     along with Blind Tower Defense  If not, see <http://www.gnu.org/licenses/>.
 
--- A* algorithm.. not really, the A* algorithm uses a heuristic estimation to guess the right way to try first.
--- this algorithm just tries all paths until it reaches the destination.  Not really optimal, but it does the job.
+-- A* algorithm
 
 -- find the first ocurrence of element with value "value"
 function table_indexOf(table, value)
