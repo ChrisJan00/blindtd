@@ -38,12 +38,17 @@ function distanceSq(a,b)
 	return (dx*dx+dy*dy)
 end
 
+-- returns the euclidean distance
+function distance(a,b)
+	return math.sqrt(distanceSq(a,b))
+end
+
 -- sorts the elements of the given table between given indices
 function sort_subtable( list, startIndex, endIndex, func)
 	local tmp = {}
-	for i=startIndex,endIndex do table.insert(tmp,list[i]) end
+	for i=startIndex,endIndex-1 do table.insert(tmp,list[i]) end
 	table.sort(tmp,func)
-	for i=startIndex,endIndex do list[i]=tmp[i-startIndex+1] end
+	for i=startIndex,endIndex-1 do list[i]=tmp[i-startIndex+1] end
 end
 
 -- returns a list with the ordinals of a random permutation of length len
@@ -69,6 +74,86 @@ function permutation( len )
 end
 
 function find_route(from, to, map)
+	local routeslist = {}
+	local push_ndx = 1
+	local pop_ndx = 1
+	local found = false
+	
+	-- push starting pos
+	routeslist[push_ndx] = {{from[1],from[2]},{from[1],from[2]},distanceSq(from,to),0}
+	push_ndx = push_ndx + 1
+	
+	while push_ndx ~= pop_ndx do
+		  -- pop new element
+		  local elem = {routeslist[pop_ndx][1][1],routeslist[pop_ndx][1][2]}
+		  local steps = routeslist[pop_ndx][3]
+		  pop_ndx = pop_ndx + 1
+		  
+		  -- if we reached destination, break
+		  if elem[1]==to[1] and elem[2]==to[2] then 
+			found = true
+			break 
+		end
+		
+			local push_order = permutation(4)
+			
+		  -- generate neighbours
+		  while table.getn(push_order) > 0 do
+		  local nexttopush = push_order[1]
+		  table.remove(push_order,1)
+		  
+		  -- up
+		  if nexttopush==1 and elem[2]>1 and (map[elem[1]][elem[2]].u==1 or map[elem[1]][elem[2]].u==2) 
+			and not table_indexOfFn(routeslist,function(x) return (x[1][1]==elem[1] and x[1][2]==elem[2]-1) end ) then
+			routeslist[push_ndx] = {{elem[1],elem[2]-1},{elem[1],elem[2]},distanceSq({elem[1],elem[2]-1},to)+steps*steps,steps+1}
+			push_ndx = push_ndx + 1
+		  end	
+		-- down
+		  if nexttopush==2 and elem[2]<map.vcells and (map[elem[1]][elem[2]].d==1 or map[elem[1]][elem[2]].d==2) 
+			and not table_indexOfFn(routeslist,function(x) return (x[1][1]==elem[1] and x[1][2]==elem[2]+1) end ) then
+			routeslist[push_ndx] = {{elem[1],elem[2]+1},{elem[1],elem[2]},distanceSq({elem[1],elem[2]+1},to)+steps*steps,steps+1}
+			push_ndx = push_ndx + 1
+		  end
+		-- left
+		  if nexttopush==3 and elem[1]>1 and (map[elem[1]][elem[2]].l==1 or map[elem[1]][elem[2]].l==2) 
+			and not table_indexOfFn(routeslist,function(x) return (x[1][1]==elem[1]-1 and x[1][2]==elem[2]) end ) then
+			routeslist[push_ndx] = {{elem[1]-1,elem[2]},{elem[1],elem[2]},distanceSq({elem[1]-1,elem[2]},to)+steps*steps,steps+1}
+			push_ndx = push_ndx + 1
+		  end
+		-- right
+		  if nexttopush==4 and elem[1]<map.hcells and (map[elem[1]][elem[2]].r==1 or map[elem[1]][elem[2]].r==2) 
+			and not table_indexOfFn(routeslist,function(x) return (x[1][1]==elem[1]+1 and x[1][2]==elem[2]) end ) then
+			routeslist[push_ndx] = {{elem[1]+1,elem[2]},{elem[1],elem[2]},distanceSq({elem[1]+1,elem[2]},to)+steps*steps,steps+1}
+			push_ndx = push_ndx + 1
+		  end
+		  
+		end
+	  
+		-- sort remaining elements by distance
+		sort_subtable( routeslist, pop_ndx, push_ndx, function(x,y) return (x[3]<y[3]) end )
+		
+	end
+	
+	-- if we reached destination, reconstruct path backwards
+	if not found then
+		return nil
+	end
+
+	local path = {}
+	local nextpoint = {routeslist[pop_ndx-1][2][1],routeslist[pop_ndx-1][2][2]}
+	table.insert(path,{to[1],to[2]})
+	table.insert(path,1,{nextpoint[1],nextpoint[2]})
+	while not (nextpoint[1]==from[1] and nextpoint[2]==from[2]) do
+		local i = table_indexOfFn( routeslist, function(x) return (x[1][1]==nextpoint[1] and x[1][2]==nextpoint[2]) end )
+		nextpoint = {routeslist[i][2][1],routeslist[i][2][2]}
+		table.insert(path,1,{nextpoint[1],nextpoint[2]})
+	end
+	
+--~ 	print(table.getn(path))
+	return path
+end
+
+function find_route_old(from, to, map)
 	local routeslist = {}
 	local push_ndx = 1
 	local pop_ndx = 1
@@ -143,5 +228,6 @@ function find_route(from, to, map)
 		table.insert(path,1,{nextpoint[1],nextpoint[2]})
 	end
 	
+	print(table.getn(path))
 	return path
 end
