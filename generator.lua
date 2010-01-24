@@ -25,6 +25,7 @@ function generateMapWRooms()
 	local i,j
 
 	local room_prob = 0.04
+	local step_door = 12
 	
 	-- closed: (cannot go through) 0
 	-- open: (can go through) 1
@@ -56,7 +57,7 @@ function generateMapWRooms()
 	local x,y = math.random(map.hcells),math.random(map.vcells)
 	local stack={}
 	local ndx
-	stack[1] = {x,y,0}
+	stack[1] = {x,y,0,0}
 	
 	
 	-- directions: 1 up, 2 down, 3 left, 4 right
@@ -65,6 +66,7 @@ function generateMapWRooms()
 		ndx = math.random(table.getn(stack))
 		x,y = stack[ndx][1],stack[ndx][2]
 		local fromdir = stack[ndx][3]
+		local step=stack[ndx][4]
 		table.remove(stack, ndx)
 		
 		if marks[x][y]<2 then 
@@ -76,6 +78,8 @@ function generateMapWRooms()
 				local checkroom = true
 				local maxW,maxH = 5,5
 				local taboo={false,false,false,false}
+				
+				marks[x][y]=0
 				
 				-- grow room
 				while checkroom and roombox[3]-roombox[1]+1<maxW and roombox[4]-roombox[2]+1<maxH do
@@ -100,7 +104,7 @@ function generateMapWRooms()
 					checkroom = true
 					for i=roomcandidate[1],roomcandidate[3] do 
 						for j=roomcandidate[2],roomcandidate[4] do 
-							if marks[i][j] >1 then checkroom = false end
+							if marks[i][j] >0 then checkroom = false end
 						end
 					end
 					if not checkroom then
@@ -140,7 +144,7 @@ function generateMapWRooms()
 						map[i][top-1].d = 0
 						if marks[i][top-1]==0 then 
 							marks[i][top-1]=1 
-							table.insert(stack,{i,top-1,2})
+							table.insert(stack,{i,top-1,2,step+1})
 						elseif marks[i][top-1]==1 then 
 							marks[i][top-1]=2 
 						end
@@ -150,7 +154,7 @@ function generateMapWRooms()
 						map[i][bot+1].u = 0
 						if marks[i][bot+1]==0 then 
 							marks[i][bot+1]=1 
-							table.insert(stack,{i,bot+1,1})
+							table.insert(stack,{i,bot+1,1,step+1})
 						elseif  marks[i][bot+1]==1 then marks[i][bot+1]=2 end
 					elseif bot==map.vcells then map[i][bot].d = 0 end
 				end
@@ -163,7 +167,7 @@ function generateMapWRooms()
 						map[lt-1][j].r = 0
 						if marks[lt-1][j]==0 then 
 							marks[lt-1][j]=1
-							table.insert(stack,{lt-1,j,4})
+							table.insert(stack,{lt-1,j,4,step+1})
 						elseif  marks[lt-1][j]==1 then marks[lt-1][j]=2 end
 					elseif lt==1 then map[lt][j].l = 0 end
 					if rt<map.hcells and not map[rt + 1][j].corridor then 
@@ -171,7 +175,7 @@ function generateMapWRooms()
 						map[rt+1][j].l = 0
 						if marks[rt+1][j]==0 then 
 							marks[rt+1][j]=1
-							table.insert(stack,{rt+1,j,3})
+							table.insert(stack,{rt+1,j,3,step+1})
 						elseif  marks[rt+1][j]==1 then marks[rt+1][j]=2 end
 					elseif rt==map.hcells then map[rt][j].r = 0 end
 				end
@@ -181,25 +185,28 @@ function generateMapWRooms()
 			marks[x][y]=4
 			
 			-- open
+			local doortype = 1
+			if step%step_door == 0 then doortype=2 end
+			
 			map[x][y].corridor = true
 			if fromdir==1 then
-				map[x][y-1].d = 1
-				map[x][y].u = 1
+				map[x][y-1].d = doortype
+				map[x][y].u = doortype
 				marks[x][y-1]=3
 			end
 			if fromdir ==2 then
-				map[x][y+1].u=1
-				map[x][y].d=1
+				map[x][y+1].u=doortype
+				map[x][y].d=doortype
 				marks[x][y+1]=3
 			end
 			if fromdir == 3 then
-				map[x-1][y].r = 1
-				map[x][y].l = 1
+				map[x-1][y].r = doortype
+				map[x][y].l = doortype
 				marks[x-1][y]=3
 			end
 			if fromdir == 4 then
-				map[x+1][y].l = 1
-				map[x][y].r = 1
+				map[x+1][y].l = doortype
+				map[x][y].r = doortype
 				marks[x+1][y]=3
 			end
 			
@@ -207,7 +214,7 @@ function generateMapWRooms()
 			if y>1 then
 				if marks[x][y-1]==0 then
 					marks[x][y-1]=1
-					table.insert(stack,{x,y-1,2})
+					table.insert(stack,{x,y-1,2,step+1})
 				elseif marks[x][y-1]==1 then
 					marks[x][y-1]=2
 				end
@@ -217,7 +224,7 @@ function generateMapWRooms()
 			if y<map.vcells then
 				if marks[x][y+1]==0 then
 					marks[x][y+1]=1
-					table.insert(stack,{x,y+1,1})
+					table.insert(stack,{x,y+1,1,step+1})
 				elseif marks[x][y+1]==1 then
 					marks[x][y+1]=2
 				end
@@ -227,7 +234,7 @@ function generateMapWRooms()
 			if x>1 then
 				if marks[x-1][y]==0 then
 					marks[x-1][y]=1
-					table.insert(stack,{x-1,y,4})
+					table.insert(stack,{x-1,y,4,step+1})
 				elseif marks[x-1][y]==1 then
 					marks[x-1][y]=2
 				end
@@ -237,7 +244,7 @@ function generateMapWRooms()
 			if x<map.hcells then
 				if marks[x+1][y]==0 then
 					marks[x+1][y]=1
-					table.insert(stack,{x+1,y,3})
+					table.insert(stack,{x+1,y,3,step+1})
 				elseif marks[x+1][y]==1 then
 					marks[x+1][y]=2
 				end
@@ -280,8 +287,8 @@ function generateMapWRooms()
 				map[x][y].u = 0
 				map[x][y].corridor = false
 			elseif y<map.vcells-1 and map[x][y+2].corridor then
-				map[x][y].d = 1
-				map[x][y+1].u = 1
+				map[x][y].d = 2
+				map[x][y+1].u = 2
 				map[x][y+1].d=1
 				map[x][y+2].u=1
 				map[x][y+1].corridor = true
@@ -295,8 +302,8 @@ function generateMapWRooms()
 				map[x][y].d = 0
 				map[x][y].corridor = false
 			elseif y>2 and map[x][y-2].corridor then
-				map[x][y].u = 1
-				map[x][y-1].d = 1
+				map[x][y].u =2
+				map[x][y-1].d = 2
 				map[x][y-1].u=1
 				map[x][y-2].d=1
 				map[x][y-1].corridor = true
@@ -310,8 +317,8 @@ function generateMapWRooms()
 				map[x][y].l = 0
 				map[x][y].corridor = false
 			elseif x<map.hcells-1 and map[x+2][y].corridor then
-				map[x][y].r = 1
-				map[x+1][y].l = 1
+				map[x][y].r = 2
+				map[x+1][y].l = 2
 				map[x+1][y].r=1
 				map[x+2][y].l=1
 				map[x+1][y].corridor = true
@@ -325,8 +332,8 @@ function generateMapWRooms()
 				map[x][y].r = 0
 				map[x][y].corridor = false
 			elseif x>2 and map[x-2][y].corridor then
-				map[x][y].l = 1
-				map[x-1][y].r = 1
+				map[x][y].l =2
+				map[x-1][y].r = 2
 				map[x-1][y].l=1
 				map[x-2][y].r=1
 				map[x-1][y].corridor = true
