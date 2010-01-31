@@ -1,3 +1,7 @@
+- improve algorithms:  A* should be able to give partial paths and resume computation
+- move to lua 0.6 for blitting the whole map into a static image
+- 
+
 - scanline impact check (loop of lines VS static image)
 - change map size in screen
 - (radar) animation of the guy walking in the screen
