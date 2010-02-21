@@ -147,50 +147,57 @@ function Scheduler.iteration(scheduler, max_delay)
 		end
 	end
 
-	-- wake up sleeping tasks
-	task = List.getFirst(scheduler.sleepingTasks)
-	while task do
-		if Tasks.checkActive(task) then
-			List.pushBack(scheduler.timedTasks, task)
-			List.removeCurrent(scheduler.sleepingTasks)
-		end
-		task = List.getNext(scheduler.sleepingTasks)
-	end
+	-- non-urgent tasks
+	local estimated_delay = 0
+	while love.timer.getTime()-startclock+estimated_delay < max_delay do
+		local iterclock = love.timer.getTime()
 
-	-- Timed tasks
-	local taskcount = scheduler.timedTasks.n + scheduler.untimedTasks.n
-	if scheduler.timedTasks.n > 0 then
-		task = List.getFirst(scheduler.timedTasks)
+		-- wake up sleeping tasks
+		task = List.getFirst(scheduler.sleepingTasks)
 		while task do
-			local available_time = max_delay - (love.timer.getTime() - startclock)
-			local time_slot = available_time / taskcount
-
 			if Tasks.checkActive(task) then
-				Tasks.iteration(time_slot, task)
-			else
-				List.pushBack(scheduler.sleepingTasks, task)
-				List.removeCurrent(scheduler.timedTasks)
+				List.pushBack(scheduler.timedTasks, task)
+				List.removeCurrent(scheduler.sleepingTasks)
 			end
-			task = List.getNext(scheduler.timedTasks)
-			taskcount = taskcount - 1
+			task = List.getNext(scheduler.sleepingTasks)
 		end
-	end
 
-	-- Untimed tasks
-	if scheduler.untimedTasks.n > 0 then
-		task = List.getFirst(scheduler.untimedTasks)
-		while task do
-			local available_time = max_delay - (love.timer.getTime() - startclock)
-			local time_slot = available_time / taskcount
+		-- Timed tasks
+		local taskcount = scheduler.timedTasks.n + scheduler.untimedTasks.n
+		if scheduler.timedTasks.n > 0 then
+			task = List.getFirst(scheduler.timedTasks)
+			while task do
+				local available_time = max_delay - (love.timer.getTime() - startclock)
+				local time_slot = available_time / taskcount
 
-			if Tasks.checkActive(task) then
-				Tasks.iteration(time_slot, task)
-			else
-				List.removeCurrent(scheduler.untimedTasks)
+				if Tasks.checkActive(task) then
+					Tasks.iteration(time_slot, task)
+				else
+					List.pushBack(scheduler.sleepingTasks, task)
+					List.removeCurrent(scheduler.timedTasks)
+				end
+				task = List.getNext(scheduler.timedTasks)
+				taskcount = taskcount - 1
 			end
-			task = List.getNext(scheduler.untimedTasks)
-			taskcount = taskcount - 1
 		end
+
+		-- Untimed tasks
+		if scheduler.untimedTasks.n > 0 then
+			task = List.getFirst(scheduler.untimedTasks)
+			while task do
+				local available_time = max_delay - (love.timer.getTime() - startclock)
+				local time_slot = available_time / taskcount
+
+				if Tasks.checkActive(task) then
+					Tasks.iteration(time_slot, task)
+				else
+					List.removeCurrent(scheduler.untimedTasks)
+				end
+				task = List.getNext(scheduler.untimedTasks)
+				taskcount = taskcount - 1
+			end
+		end
+		estimated_delay = love.timer.getTime()-iterclock
 	end
 end
 
@@ -199,7 +206,7 @@ end
 -- Example of usage
 ---------------------------------------------------------
 
---- run test
+--~ --- run test
 --~ Visitor={}
 --~ function Visitor.reset_loop()
 --~ 	Visitor.i = 0
