@@ -34,17 +34,21 @@ function Game.load()
 	-- 1 edit
 	-- 2 move guy
 	-- 3 speed test
-	gamemode = 2
+	-- 4 scheduler test
+	gamemode = 4
 	step_counter = 0
 	step_size = 0.08
 	tabledelay = 0
 	listdelay = 0
+
+	scheduler = Scheduler()
+	pathcont={ path={} }
 end
 
 function Game.update(dt)
 
 	if gamemode == 2 then
-	local do_step = false
+		local do_step = false
 		local nsteps = 1
 		if step_counter>0 then
 			step_counter = step_counter - dt
@@ -92,6 +96,33 @@ function Game.update(dt)
 --~ 		print(routedelay.." "..meandelay)
 	end
 
+	if gamemode == 4 then
+		-- 60 FPS
+		scheduler:iteration(1.0/60.0)
+
+		local do_step = false
+		local nsteps = 1
+		if step_counter>0 then
+			step_counter = step_counter - dt
+		end
+		if step_counter<=0 then
+			do_step = true
+			nsteps = math.floor(math.abs(step_counter/step_size))+1
+			step_counter = step_size
+		end
+
+		if pathcont.path and do_step then
+			if table.getn(pathcont.path)>0 then
+				if nsteps>table.getn(pathcont.path) then nsteps=table.getn(pathcont.path) end
+				currentpos = pathcont.path[nsteps]
+				local i
+				for i=1,nsteps do
+					table.remove(pathcont.path,1)
+				end
+			end
+		end
+	end
+
 end
 
 
@@ -109,6 +140,14 @@ function Game.draw()
 		love.graphics.draw(cutdelay, 482,20)
 		local cutdelay = math.floor(listdelay*10000)/10000
 		love.graphics.draw(cutdelay, 482,40)
+	end
+
+	if gamemode == 4 then
+		drawchar(currentpos)
+--~ 		drawpath(pathcont.path)
+--~ 		love.graphics.setColor(255,255,255,255)
+--~ 		love.graphics.draw(table.getn(scheduler.untimedTasks), 482,20)
+
 	end
 
  	drawscanlines()
@@ -329,6 +368,13 @@ function Game.mousepressed(x, y, button)
 		if not currentpos then currentpos = {cx,cy} end
 		mypath = findRoute( currentpos, {cx,cy}, Map )
 		--currentpos = {cx,cy}
+	end
+
+	if gamemode == 4 and Map[cx][cy].corridor and button == love.mouse_left then
+		if not currentpos then currentpos = {cx,cy} end
+		--mypath = findRoute( currentpos, {cx,cy}, Map )
+		scheduler:addUntimedTask(RouteFinder(currentpos, {cx,cy}, Map, pathcont))
+--~ 		currentpos = {cx,cy}
 	end
 end
 

@@ -52,9 +52,10 @@ function Task:iteration(max_delay)
 	local elapsed=0
 	local starttime = love.timer.getTime()
 	local startwatch = starttime
+
 	while (elapsed + self.estimated_delay < max_delay) and (not self.finished) do
 
-		self.finished = self.visitor:iterate(self.dt)
+		self.finished = self.visitor:iteration(self.dt)
 
 		local stopwatch = love.timer.getTime()
 		self.estimated_delay = self.time_alpha * self.estimated_delay + (1-self.time_alpha)*(stopwatch-startwatch)
@@ -206,7 +207,7 @@ GenericVisitor = class(function(vis) end)
 function GenericVisitor:reset_loop()
 end
 
-function GenericVisitor:iterate(dt)
+function GenericVisitor:iteration(dt)
 	return true
 end
 
@@ -228,7 +229,7 @@ if false then
 		self.j = self.j + 1
 	end
 
-	function Visitor:iterate(dt)
+	function Visitor:iteration(dt)
 		local i,j
 		local A={}
 		local M=100
@@ -255,7 +256,7 @@ if false then
 		self.lim = 20
 	end
 
-	function Visitor2:iterate(dt)
+	function Visitor2:iteration(dt)
 		local i,j
 		local A={}
 		local M=200
@@ -279,7 +280,7 @@ if false then
 		self.lim = 100
 	end
 
-	function Visitor3:iterate(dt)
+	function Visitor3:iteration(dt)
 		self.i = self.i + 1
 		print("urgent "..self.i)
 		if self.i==self.lim then return true end
