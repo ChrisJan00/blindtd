@@ -28,15 +28,7 @@ if not love then
 	end
 end
 
---~ Tasks = {}
-
---~ Tasks.types = {
---~ 	urgent = 1,
---~ 	timed = 2,
---~ 	untimed = 3,
---~ }
 Task = class( function(task, visitorInstance)
---~ 	if not iterationPeriod then iterationPeriod = 10000 end -- large
 	task.active = true
 	task.estimated_delay = 0
 	task.finished = false
@@ -49,27 +41,9 @@ Task = class( function(task, visitorInstance)
 	task.stopwatch = love.timer.getTime()
 end)
 
---~ function Tasks.create( visitorInstance, ttype, iterationPeriod )
---~ 	if not iterationPeriod then iterationPeriod = 10000 end -- large
---~ 	local task={
---~ 		active = true,
---~ 		estimated_delay = 0,
---~ 		finished = false,
---~ 		visitor = visitorInstance,
---~ 		ready = false,
---~ 		time_alpha = 0.9,
---~ 		tasktype = ttype,
---~ 		period = iterationPeriod,
---~ 		timer = 0,
---~ 		dt = 0,
---~ 	}
---~ 	task.stopwatch = love.timer.getTime()
---~ 	return task
---~ end
-
 function Task:iteration(max_delay)
 	if not self.ready then
-		self.visitor.reset_loop()
+		self.visitor:reset_loop()
 		self.finished = false
 		self.ready = true
 		self.active = true
@@ -80,7 +54,7 @@ function Task:iteration(max_delay)
 	local startwatch = starttime
 	while (elapsed + self.estimated_delay < max_delay) and (not self.finished) do
 
-		self.finished = self.visitor.iterate(self.dt)
+		self.finished = self.visitor:iterate(self.dt)
 
 		local stopwatch = love.timer.getTime()
 		self.estimated_delay = self.time_alpha * self.estimated_delay + (1-self.time_alpha)*(stopwatch-startwatch)
@@ -93,7 +67,7 @@ function Task:iteration(max_delay)
 	end
 
 	if self.finished then
-		self.visitor.finish_loop()
+		self.visitor:finish_loop()
 		self.active = false
 	end
 end
@@ -116,7 +90,7 @@ end)
 
 function TimedTask:checkActive()
 	-- calling superclass method does not work, copypasting the code
---~ 	self._base:checkActive()
+ 	-- self._base:checkActive()
 
 	local stopwatch = love.timer.getTime()
 	self.dt = stopwatch - self.stopwatch
@@ -142,17 +116,14 @@ Scheduler = class( function(scheduler)
 end )
 
 function Scheduler:addTimedTask(visitor, period)
---~ 	local newtask = Tasks.create( visitor, Tasks.types.timed, period)
 	self.sleepingTasks:pushBack(TimedTask(visitor,period))
 end
 
 function Scheduler:addUntimedTask(visitor)
---~ 	local newtask = Tasks.create( visitor, Tasks.types.untimed)
 	self.untimedTasks:pushBack(UntimedTask(visitor))
 end
 
 function Scheduler:addUrgentTask(visitor)
---~ 	local newtask = Tasks.create( visitor, Tasks.types.urgent)
 	self.urgentTasks:pushBack(UrgentTask(visitor))
 end
 
@@ -229,91 +200,101 @@ function Scheduler:iteration(max_delay)
 	end
 end
 
+-- subclass this for the scheduler
+GenericVisitor = class(function(vis) end)
+
+function GenericVisitor:reset_loop()
+end
+
+function GenericVisitor:iterate(dt)
+	return true
+end
+
+function GenericVisitor:finish_loop()
+end
 
 ----------------------------------------------------
 -- Example of usage
 ---------------------------------------------------------
 if false then
---- run test
-Visitor={}
-function Visitor.reset_loop()
-	Visitor.i = 0
-	Visitor.lim = 10
-	Visitor.j = Visitor.j + 1
-end
+	--- run test
+	Visitor=class(GenericVisitor,function(vis)
+		vis.j=0
+	end)
 
-function Visitor.iterate(dt)
-	local i,j
-	local A={}
-	local M=100
-	for i=1,M do
-		A[i]={}
-		for j=1,M do
-			A[i][M+1-j] = "chiska"
-		end
+	function Visitor:reset_loop()
+		self.i = 0
+		self.lim = 10
+		self.j = self.j + 1
 	end
 
-	Visitor.i = Visitor.i + 1
-	print(Visitor.j.." timed "..Visitor.i)
-	if Visitor.i==Visitor.lim then return true end
-	return false
-end
-
-function Visitor.finish_loop()
-end
-
-Visitor.j = 0
-
-Visitor2={}
-function Visitor2.reset_loop()
-	Visitor2.i = 0
-	Visitor2.lim = 20
-end
-
-function Visitor2.iterate(dt)
-	local i,j
-	local A={}
-	local M=200
-	for i=1,M do
-		A[i]={}
-		for j=1,M do
-			A[i][M+1-j] = "chiska"
+	function Visitor:iterate(dt)
+		local i,j
+		local A={}
+		local M=100
+		for i=1,M do
+			A[i]={}
+			for j=1,M do
+				A[i][M+1-j] = "chiska"
+			end
 		end
+
+		self.i = self.i + 1
+		print(self.j.." timed "..self.i)
+		if self.i==self.lim then return true end
+		return false
 	end
 
-	Visitor2.i = Visitor2.i + 1
-	print("untimed "..Visitor2.i)
-	if Visitor2.i==Visitor2.lim then return true end
-	return false
-end
+	-- no need to overload these
+	--function Visitor:finish_loop()
+	--end
 
-function Visitor2.finish_loop()
-end
+	Visitor2=class(GenericVisitor)
+	function Visitor2:reset_loop()
+		self.i = 0
+		self.lim = 20
+	end
 
-Visitor3={}
-function Visitor3.reset_loop()
-	Visitor3.i = 0
-	Visitor3.lim = 100
-end
+	function Visitor2:iterate(dt)
+		local i,j
+		local A={}
+		local M=200
+		for i=1,M do
+			A[i]={}
+			for j=1,M do
+				A[i][M+1-j] = "chiska"
+			end
+		end
 
-function Visitor3.iterate(dt)
+		self.i = self.i + 1
+		print("untimed "..self.i)
+		if self.i==self.lim then return true end
+		return false
+	end
 
-	Visitor3.i = Visitor3.i + 1
-	print("urgent "..Visitor3.i)
-	if Visitor3.i==Visitor3.lim then return true end
-	return false
-end
 
-function Visitor3.finish_loop()
-end
+	Visitor3=class(GenericVisitor)
+	function Visitor3:reset_loop()
+		self.i = 0
+		self.lim = 100
+	end
 
-sched = Scheduler()
-sched:addTimedTask(Visitor, 1)
-sched:addUntimedTask( Visitor2)
-sched:addUrgentTask( Visitor3)
+	function Visitor3:iterate(dt)
+		self.i = self.i + 1
+		print("urgent "..self.i)
+		if self.i==self.lim then return true end
+		return false
+	end
 
-local totallimit = 1000
-while Visitor.j<10 do
-	sched:iteration( 0.1)
-end
+
+	sched = Scheduler()
+	timedvisitor = Visitor()
+	sched:addTimedTask(timedvisitor, 1)
+	sched:addUntimedTask( Visitor2() )
+	sched:addUrgentTask( Visitor3() )
+
+	local totallimit = 1000
+	while timedvisitor.j<10 do
+		sched:iteration( 0.1)
+	end
 end
