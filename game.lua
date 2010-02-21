@@ -33,41 +33,85 @@ function Game.load()
 
 	-- 1 edit
 	-- 2 move guy
+	-- 3 speed test
 	gamemode = 2
 	step_counter = 0
 	step_size = 0.08
+	tabledelay = 0
+	listdelay = 0
 end
 
 function Game.update(dt)
-	local do_step = false
-	local nsteps = 1
-	if step_counter>0 then
-		step_counter = step_counter - dt
-	end
-	if step_counter<=0 then
-		do_step = true
-		nsteps = math.floor(math.abs(step_counter/step_size))+1
-		step_counter = step_size
-	end
 
-	if mypath and do_step then
-		if table.getn(mypath)>0 then
-			if nsteps>table.getn(mypath) then nsteps=table.getn(mypath) end
-			currentpos = mypath[nsteps]
-			local i
-			for i=1,nsteps do
-				table.remove(mypath,1)
+	if gamemode == 2 then
+	local do_step = false
+		local nsteps = 1
+		if step_counter>0 then
+			step_counter = step_counter - dt
+		end
+		if step_counter<=0 then
+			do_step = true
+			nsteps = math.floor(math.abs(step_counter/step_size))+1
+			step_counter = step_size
+		end
+
+		if mypath and do_step then
+			if table.getn(mypath)>0 then
+				if nsteps>table.getn(mypath) then nsteps=table.getn(mypath) end
+				currentpos = mypath[nsteps]
+				local i
+				for i=1,nsteps do
+					table.remove(mypath,1)
+				end
 			end
 		end
 	end
+
+	if gamemode == 3 then
+		local fx,fy,tx,ty
+		while true do
+			fx = math.random(Map.hcells)
+			fy = math.random(Map.vcells)
+			tx = math.random(Map.hcells)
+			ty = math.random(Map.vcells)
+			if fx~=tx and fy~=ty and Map[fx][fy].corridor and Map[tx][ty].corridor then break end
+		end
+
+--~ 		if step_counter == 0 then
+			local starttimet = love.timer.getTime()
+--~ 			mypath = findRoute_tables( {fx,fy}, {tx,ty}, Map )
+			local routedelayt =  love.timer.getTime() - starttimet
+			tabledelay = 0.99*tabledelay + 0.01*routedelayt
+--~ 		else
+			local starttimel = love.timer.getTime()
+			mypath = findRoute( {fx,fy}, {tx,ty}, Map )
+			local routedelayl =  love.timer.getTime() - starttimel
+			listdelay = 0.99*listdelay + 0.01*routedelayl
+--~ 		end
+--~ 		step_counter = 1-step_counter
+--~ 		print(routedelay.." "..meandelay)
+	end
+
 end
 
 
 function Game.draw()
 	drawmap(Map)
-	--drawpath(mypath)
-	drawchar(currentpos)
---~ 	drawscanlines()
+	if gamemode == 2 then
+		drawchar(currentpos)
+--~ 		drawpath(mypath)
+	end
+
+	if gamemode == 3 then
+		drawpath(mypath)
+		love.graphics.setColor(255,255,255,255)
+		local cutdelay = math.floor(tabledelay*10000)/10000
+		love.graphics.draw(cutdelay, 482,20)
+		local cutdelay = math.floor(listdelay*10000)/10000
+		love.graphics.draw(cutdelay, 482,40)
+	end
+
+ 	drawscanlines()
 end
 
 function drawchar( c )
@@ -283,7 +327,7 @@ function Game.mousepressed(x, y, button)
 
 	if gamemode == 2 and Map[cx][cy].corridor and button == love.mouse_left then
 		if not currentpos then currentpos = {cx,cy} end
-		mypath = find_route( currentpos, {cx,cy}, Map )
+		mypath = findRoute( currentpos, {cx,cy}, Map )
 		--currentpos = {cx,cy}
 	end
 end

@@ -84,9 +84,13 @@ function List.popFront(list)
 	local retval = list.first.ref
 	local newfirst = list.first.next
 	list.first.next = nil
-	list.first = newfirst
-	if newfirst then newfirst.prev = nil end
-	list.n = list.n - 1
+	if newfirst then
+		list.first = newfirst
+		newfirst.prev = nil
+		list.n = list.n - 1
+	else
+		List.discard(list)
+	end
 	return retval
 end
 
@@ -95,9 +99,13 @@ function List.popBack(list)
 	local retval = list.last.ref
 	local newlast = list.last.prev
 	list.last.prev = nil
-	list.last = newlast
-	if newlast then newlast.next = nil end
-	list.n = list.n - 1
+	if newlast then
+		list.last = newlast
+		newlast.next = nil
+		list.n = list.n - 1
+	else
+		List.discard(list)
+	end
 	return retval
 end
 
@@ -264,31 +272,35 @@ function List.changeValue(list, value)
 	list.current = oldprev
 end
 
---~ -- Example of use
---~ list = List.newList()
---~ List.pushBack(list,"abc")
---~ List.pushBack(list,"cde")
---~ List.pushBack(list,"def")
+--~ -- Example of use (make the condition true to test)
+if false then
+	list = List.newList()
+	List.pushBack(list,"abc")
+	List.pushBack(list,"cde")
+	List.pushBack(list,"def")
 
---~ -- print
---~ elem = List.getFirst(list)
---~ while elem do
---~ 	print(elem)
---~ 	elem = List.getNext(list)
---~ end
+	-- print
+	elem = List.getFirst(list)
+	while elem do
+		print(elem)
+		elem = List.getNext(list)
+	end
 
---~ -- reset
---~ print()
---~ List.discard(list)
+	-- reset
+	print()
+	List.discard(list)
 
---~ -- sort while inserting
---~ List.pushFrontSorted(list,"iii",3)
---~ List.pushFrontSorted(list,"ooo",4)
---~ List.pushFrontSorted(list,"aaa",1)
+	-- sort while inserting
+	List.pushFrontSorted(list,"iii",3)
+	List.pushFrontSorted(list,"ooo",4)
+	List.pushFrontSorted(list,"aaa",1)
 
---~ -- print in reverse order (from high to low)
---~ elem = List.getLast(list)
---~ while elem do
---~ 	print(elem)
---~ 	elem = List.getPrev(list)
---~ end
+	-- print in reverse order (from high to low)
+	elem = List.popBack(list)
+	while elem do
+		print(elem)
+		elem = List.popBack(list)
+	end
+
+	List.discard(list)
+end
