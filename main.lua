@@ -19,6 +19,7 @@
 function load()
 
 	-- Dependencies
+	love.filesystem.require("class.lua")
 	love.filesystem.require("linkedlists.lua")
 	love.filesystem.require("scheduler.lua")
 	love.filesystem.require("game.lua")

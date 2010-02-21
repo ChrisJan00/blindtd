@@ -1,3 +1,7 @@
+- findRoute in scheduler
+
+
+
 - improve algorithms:  A* should be able to give partial paths and resume computation
 - move to lua 0.6 for blitting the whole map into a static image
 - 

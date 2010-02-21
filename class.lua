@@ -62,29 +62,35 @@ function class(base, init)
    return c
 end
 
---~ A = class( function(a,i)
---~ 	a.i=i or 10
---~ 	end )
 
---~ function A:inc()
---~ 	self.i = self.i+1
---~ end
+if false then
+	A = class( function(a,i)
+		a.i=i or 10
+		end )
 
---~ function A:show()
---~ 	print(self.i)
---~ end
+	function A:inc()
+		self.i = self.i+1
+	end
 
---~ B = class(A)
---~ function B:inc()
---~ 	self.i = self.i+20
---~ end
+	function A:show()
+		print(self.i)
+	end
 
---~ inst = A()
---~ inst:show()
---~ inst:inc()
---~ inst:show()
+	B = class(A, function(b)
+		b._base.init(b,30)
+		--b.i = i or 500
+		end)
+	function B:inc()
+		self.i = self.i+20
+	end
 
---~ inst2 = B()
---~ inst:show()
---~ inst:inc()
---~ inst:show()
+	inst = A()
+	inst:show()
+	inst:inc()
+	inst:show()
+
+	inst2 = B()
+	inst2:show()
+	inst2:inc()
+	inst2:show()
+end
