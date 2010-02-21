@@ -1,10 +1,19 @@
-- findRoute in scheduler
 
-
-
-- improve algorithms:  A* should be able to give partial paths and resume computation
 - move to lua 0.6 for blitting the whole map into a static image
-- 
+
+- doors that open and close
+- cleanup (erase old unused code)
+- orders: be able to give a list of orders to the character, he will follow them in sequence.  Also, cancel order,
+break list, prioritize...
+- enemies!  that move
+- scent!
+- weapons
+- radar
+- personal info
+- radio, heartbeat
+- rescue spaceship
+- several rooms
+
 
 - scanline impact check (loop of lines VS static image)
 - change map size in screen
