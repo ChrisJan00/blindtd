@@ -1,4 +1,5 @@
 
+
 - move to lua 0.6 for blitting the whole map into a static image
 
 - doors that open and close
@@ -13,6 +14,40 @@ break list, prioritize...
 - radio, heartbeat
 - rescue spaceship
 - several rooms
+
+=======
+- improve algorithms:  A* should be able to give partial paths and resume computation
+- A* with linked lists (sorting by insertion)
+- move to lua 0.6 for blitting the whole map into a static image
+- blit the scanlines
+- doors (automatic)
+- aliens
+- scent
+- instructions for the player (list of tasks)
+- block doors
+- turrets
+   - machine gun
+   - flame thrower
+   - laser
+   - electroshock
+- mines
+- levels
+- ui: blinking lights
+- ui: text
+- chat
+- player info
+- player radio
+- player heartbeat
+- spaceship ETA
+- radar
+- baby
+- self destruction
+- player emotion in chat
+- doors randomly closed
+- map of the base
+- bombs (time)
+- flooding passage
+  - histories paraleles?  supervivents?
 
 
 - scanline impact check (loop of lines VS static image)

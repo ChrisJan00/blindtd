@@ -15,8 +15,12 @@
 --
 --     You should have received a copy of the GNU General Public License
 --     along with Blind Tower Defense  If not, see <http://www.gnu.org/licenses/>.
+function love.filesystem.require(filename)
+	g = love.filesystem.load(filename)
+	g()
+end
 
-function load()
+function love.load()
 
 	-- Dependencies
 	love.filesystem.require("class.lua")
@@ -41,7 +45,7 @@ function load()
 	end
 
 	-- Audio system
-	love.audio.setChannels(16)
+	--love.audio.setChannels(16)
 	love.audio.setVolume(.3)
 
 	-- Text
@@ -52,36 +56,36 @@ function load()
 
 end
 
-function update(dt)
+function love.update(dt)
 
 	Game.update(dt)
 
 end
 
 
-function draw()
+function love.draw()
 	Game.draw()
 end
 
 
-function keypressed(key)
+function love.keypressed(key)
 	Game.keypressed(key)
 end
 
 
-function keyreleased(key)
+function love.keyreleased(key)
 	Game.keyreleased(key)
 end
 
 
-function mousepressed(x, y, button)
+function love.mousepressed(x, y, button)
 	Game.mousepressed(x,y,button)
 
 end
 
 
 
-function mousereleased(x, y, button)
+function love.mousereleased(x, y, button)
 
 	Game.mousereleased(x,y, button)
 
