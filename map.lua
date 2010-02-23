@@ -20,8 +20,8 @@
 
 Map={}
 
-Map.hcells = 80
-Map.vcells = 80
+Map.hcells = 20
+Map.vcells = 20
 
 Cell = {
 	width = math.floor(screensize[1]/Map.hcells),

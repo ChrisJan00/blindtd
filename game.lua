@@ -43,6 +43,7 @@ function Game.load()
 
 	scheduler = Scheduler()
 	pathcont={ path={} }
+	mypath={}
 	mytext=""
 end
 
@@ -100,6 +101,13 @@ function Game.update(dt)
 	if gamemode == 4 then
 		-- 60 FPS
 		scheduler:iteration(1.0/60.0)
+		
+		if table.getn(pathcont.path)>0 then
+			for i,v in ipairs(pathcont.path) do
+				table.insert(mypath,v)
+			end
+			pathcont.path = {}
+		end
 
 		local do_step = false
 		local nsteps = 1
@@ -112,13 +120,13 @@ function Game.update(dt)
 			step_counter = step_size
 		end
 
-		if pathcont.path and do_step then
-			if table.getn(pathcont.path)>0 then
-				if nsteps>table.getn(pathcont.path) then nsteps=table.getn(pathcont.path) end
-				currentpos = pathcont.path[nsteps]
+		if mypath and do_step then
+			if table.getn(mypath)>0 then
+				if nsteps>table.getn(mypath) then nsteps=table.getn(mypath) end
+				currentpos = mypath[nsteps]
 				local i
 				for i=1,nsteps do
-					table.remove(pathcont.path,1)
+					table.remove(mypath,1)
 				end
 			end
 		end
@@ -146,10 +154,10 @@ function Game.draw()
 
 	if gamemode == 4 then
 --~ 		drawchar(currentpos)
-		drawpath(pathcont.path)
+		drawpath(mypath)
 		
 --~ 		love.graphics.setColor(255,255,255,255)
---~ 		love.graphics.print(table.getn(pathcont.path), 482,20)
+--~ 		love.graphics.print(table.getn(mypath), 482,20)
 
 	end
 
@@ -178,13 +186,29 @@ function drawpath( p )
 end
 
 function drawscanlines()
-	local i
-	local shalf = math.floor( screensize[2]/2)
-	love.graphics.setColor(0,0,0,128)
-	love.graphics.setLine(1,"rough" )
-	for i=1,shalf do
-		love.graphics.line(0,i*2-1,screensize[1],i*2-1)
+	
+--~ 	local i
+--~ 	local shalf = math.floor( screensize[2]/2)
+--~ 	love.graphics.setColor(0,0,0,128)
+--~ 	love.graphics.setLine(1,"rough" )
+--~ 	for i=1,shalf do
+--~ 		love.graphics.line(0,i*2-1,screensize[1],i*2-1)
+--~ 	end
+	
+	-- todo: cache generation should go somewhere else (load method?)
+	if not cached_scanlines then
+		-- pad the image?
+		local scanlines_data = love.image.newImageData(screensize[1],screensize[2])
+		local i,j
+		local shalf = math.floor( screensize[2]/2 )
+		for j=1,shalf do
+			for i=1,screensize[1] do
+				scanlines_data:setPixel(i,j*2,0,0,0,128)
+			end
+		end
+		cached_scanlines = love.graphics.newImage( scanlines_data )
 	end
+	love.graphics.draw(cached_scanlines,0,0)
 end
 
 function myprint(t)
@@ -385,7 +409,9 @@ function Game.mousepressed(x, y, button)
 	if gamemode == 4 and Map[cx][cy].corridor and button == "l" then
 		if not currentpos then currentpos = {cx,cy} end
 		--mypath = findRoute( currentpos, {cx,cy}, Map )
-		scheduler:addUntimedTask(RouteFinder(currentpos, {cx,cy}, Map, pathcont))
+		local dest = currentpos
+		if table.getn(mypath)>0 then dest = mypath[table.getn(mypath)] end
+		scheduler:addUntimedTask(RouteFinder(dest, {cx,cy}, Map, pathcont))
 --~ 		currentpos = {cx,cy}
 	end
 end
