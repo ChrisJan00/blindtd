@@ -84,6 +84,10 @@ if false then
 		self.i = self.i+20
 	end
 
+	function B:callinc()
+		self:inc()
+	end
+
 	inst = A()
 	inst:show()
 	inst:inc()

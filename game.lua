@@ -37,7 +37,7 @@ function Game.load()
 	-- 4 scheduler test
 	gamemode = 4
 	step_counter = 0
-	step_size = 0.08
+	step_size = 0.012
 	tabledelay = 0
 	listdelay = 0
 
@@ -136,7 +136,7 @@ end
 
 
 function Game.draw()
-	drawmap(Map)
+	drawCachedMap(Map)
 
 	if gamemode == 2 then
 		drawchar(currentpos)
