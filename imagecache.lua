@@ -18,14 +18,13 @@
 
 -- love must be present
 
--- todo: test all these
 -- todo: create scheduled version of map cacher using this class also
--- todo: sort the methods
+-- todo: rectangles should not overwrite, but draw on top using alpha
 
 ImageCache = class(function(c,w,h)
 	c.width = w or love.graphics.getWidth()
 	c.height = h or love.graphics.getHeight()
-	c.imagedata = love.image.newImageData(w,h)
+	c.imagedata = love.image.newImageData(c.width,c.height)
 	c.image = love.graphics.newImage(c.imagedata)
 	c.modified = false
 end)
@@ -39,6 +38,39 @@ function ImageCache:copy(source)
 	self.modified = source.modified
 end
 
+function ImageCache:blit(x,y)
+	if self.modified then
+		self.image = love.graphics.newImage( self.imagedata )
+		self.modified = false
+	end
+	local px = x or 0
+	local py = y or 0
+	love.graphics.draw(self.image,px,py)
+end
+
+function ImageCache:erase()
+	self.imagedata = love.image.newImageData(self.width,self.height)
+	self.modified = true
+end
+
+function ImageCache:sortCoords(ox1,oy1,ox2,oy2)
+	local x1,y1,x2,y2 = ox1,oy1,ox2,oy2
+	if y2<y1 then
+		local tmp = y1
+		y1 =y2
+		y2 = tmp
+	end
+	if x2<x1 then
+		local tmp = x1
+		x1 = x2
+		x2 = tmp
+	end
+	if y1<0 then y1=0 end
+	if y2>=self.height then y2=self.height-1 end
+	if x1<0 then x1=0 end
+	if x2>=self.width then x2=self.width-1 end
+	return x1,y1,x2,y2
+end
 
 function ImageCache:getColor(color)
 	if not color then
@@ -46,6 +78,10 @@ function ImageCache:getColor(color)
 	else
 		return color[1],color[2],color[3],color[4]
 	end
+end
+
+function ImageCache:eraseRegion(x1,y1,x2,y2)
+	self:drawRectangle(x1,y1,x2,y2,{0,0,0,0})
 end
 
 function ImageCache:drawStraightLine( x1, y1, x2, y2, color, width)
@@ -87,20 +123,6 @@ function ImageCache:drawDot(x,y,color)
 	self.imagedata:setPixel(x,y,r,g,b,a)
 end
 
-function ImageCache:eraseRegion(x1,y1,x2,y2)
-	self:drawRectangle(x1,y1,x2,y2,0,0,0,0)
-end
-
-function ImageCache:blit(x,y)
-	if self.modified then
-		self.image = love.graphics.newImage( self.imagedata )
-		self.modified = false
-	end
-	local px = x or 0
-	local py = y or 0
-	love.graphics.draw(self.image,px,py)
-end
-
 function ImageCache:drawImage(source,x,y)
 	local sx1,sy1,dx,dy = 0,0,source.width,source.height
 	local x1,y1 = x,y
@@ -129,8 +151,10 @@ function ImageCache:drawImage(source,x,y)
 	self.modified=true
 	for j=1,dy do
 		for i=1,dx do
-			r,g,b,a = source.imagedata.getPixel(sx1+i-1,sy1+j-1)
+			r,g,b,a = source.imagedata:getPixel(sx1+i-1,sy1+j-1)
 			r1,g1,b1,a1 = self.imagedata:getPixel(x1+i-1,y1+j-1)
+			a = a/255
+			a1 = a1/255
 			a2 = (1-a)*a1+a
 			if a2==0 then
 				r2,g2,b2 = r1,g1,b1
@@ -139,7 +163,7 @@ function ImageCache:drawImage(source,x,y)
 				g2 = ((1-a)*g1*a1+a*g)/a2
 				b2 = ((1-a)*b1*a1+a*b)/a2
 			end
-			self.imagedata:setPixel(x1+i-1,y1+i-1,r2,g2,b2,a2)
+			self.imagedata:setPixel(x1+i-1,y1+j-1,r2,g2,b2,a2*255)
 		end
 	end
 
@@ -152,7 +176,7 @@ function ImageCache:fromFile(filename)
 	self.modified=true
 end
 
-function ImageCache:getRegion(x1,y1,x2,y2)
+function ImageCache:cutRegion(x1,y1,x2,y2)
 	local lx1,ly1,lx2,ly2 = self:sortCoords(x1,y1,x2,y2)
 	local dy = y2-y1+1
 	local dx = x2-x1+1
@@ -168,28 +192,4 @@ function ImageCache:getRegion(x1,y1,x2,y2)
 	end
 	newImage.modified = true
 	return newImage
-end
-
-function ImageCache:sortCoords(ox1,oy1,ox2,oy2)
-	local x1,y1,x2,y2 = ox1,oy1,ox2,oy2
-	if y2<y1 then
-		local tmp = y1
-		y1 =y2
-		y2 = tmp
-	end
-	if x2<x1 then
-		local tmp = x1
-		x1 = x2
-		x2 = tmp
-	end
-	if y1<0 then y1=0 end
-	if y2>=self.height then y2=self.height-1 end
-	if x1<0 then x1=0 end
-	if x2>=self.width then x2=self.width-1 end
-	return x1,y1,x2,y2
-end
-
-function ImageCache:erase()
-	self.imagedata = love.image.newImageData(self.width,self.height)
-	self.modified = true
 end

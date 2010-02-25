@@ -23,9 +23,8 @@ Game = {}
 function Game.load()
 	love.filesystem.load("map.lua")()
 	love.filesystem.load("routefinder.lua")()
-	examplemap()
---~ 	Map = generateMap()
-	Map = generateMapWRooms()
+--~ 	mymap = generatemymap()
+	mymap = generateMapWRooms()
 
 	love.graphics.setBackgroundColor(0,0,48)
 	love.graphics.setColor(0,160,160)
@@ -76,21 +75,21 @@ function Game.update(dt)
 	if gamemode == 3 then
 		local fx,fy,tx,ty
 		while true do
-			fx = math.random(Map.hcells)
-			fy = math.random(Map.vcells)
-			tx = math.random(Map.hcells)
-			ty = math.random(Map.vcells)
-			if fx~=tx and fy~=ty and Map[fx][fy].corridor and Map[tx][ty].corridor then break end
+			fx = math.random(mymap.hcells)
+			fy = math.random(mymap.vcells)
+			tx = math.random(mymap.hcells)
+			ty = math.random(mymap.vcells)
+			if fx~=tx and fy~=ty and mymap[fx][fy].corridor and mymap[tx][ty].corridor then break end
 		end
 
 --~ 		if step_counter == 0 then
 			local starttimet = love.timer.getTime()
---~ 			mypath = findRoute_tables( {fx,fy}, {tx,ty}, Map )
+--~ 			mypath = findRoute_tables( {fx,fy}, {tx,ty}, mymap )
 			local routedelayt =  love.timer.getTime() - starttimet
 			tabledelay = 0.99*tabledelay + 0.01*routedelayt
 --~ 		else
 			local starttimel = love.timer.getTime()
-			mypath = findRoute( {fx,fy}, {tx,ty}, Map )
+			mypath = findRoute( {fx,fy}, {tx,ty}, mymap )
 			local routedelayl =  love.timer.getTime() - starttimel
 			listdelay = 0.99*listdelay + 0.01*routedelayl
 --~ 		end
@@ -101,7 +100,7 @@ function Game.update(dt)
 	if gamemode == 4 then
 		-- 60 FPS
 		scheduler:iteration(1.0/60.0)
-		
+
 		if table.getn(pathcont.path)>0 then
 			for i,v in ipairs(pathcont.path) do
 				table.insert(mypath,v)
@@ -136,7 +135,8 @@ end
 
 
 function Game.draw()
-	drawCachedMap(Map)
+	--drawCachedmymap(mymap)
+	Map.draw(mymap)
 
 	if gamemode == 2 then
 		drawchar(currentpos)
@@ -155,7 +155,7 @@ function Game.draw()
 	if gamemode == 4 then
 --~ 		drawchar(currentpos)
 		drawpath(mypath)
-		
+
 --~ 		love.graphics.setColor(255,255,255,255)
 --~ 		love.graphics.print(table.getn(mypath), 482,20)
 
@@ -169,7 +169,7 @@ end
 function drawchar( c )
 
 	if not c then return end
-	local dx,dy = Cell.width,Cell.height
+	local dx,dy = map.side,map.side
 
 	love.graphics.setColor(188,168,0)
 	love.graphics.rectangle("fill" , (c[1]-1)*dx+1,(c[2]-1)*dy+1,dx-1,dy-1 )
@@ -178,7 +178,8 @@ end
 function drawpath( p )
 	local i,v
 	if not p then return end
-	local dx,dy = Cell.width,Cell.height
+	local mymap=mymap
+	local dx,dy = mymap.side,mymap.side
 	for i,v in ipairs(p) do
 		love.graphics.setColor(188,168,i*255/table.getn(p))
 		love.graphics.rectangle( "fill" , (v[1]-1)*dx+1,(v[2]-1)*dy+1,dx-1,dy-1 )
@@ -186,7 +187,7 @@ function drawpath( p )
 end
 
 function drawscanlines()
-	
+
 --~ 	local i
 --~ 	local shalf = math.floor( screensize[2]/2)
 --~ 	love.graphics.setColor(0,0,0,128)
@@ -194,7 +195,7 @@ function drawscanlines()
 --~ 	for i=1,shalf do
 --~ 		love.graphics.line(0,i*2-1,screensize[1],i*2-1)
 --~ 	end
-	
+
 	-- todo: cache generation should go somewhere else (load method?)
 	if not cached_scanlines then
 		-- pad the image?
@@ -227,11 +228,11 @@ function Game.keypressed(key)
 	end
 
 	if key == "s" then
-		saveMap( Map )
+		savemymap( mymap )
 	end
 
 	if key == "l" then
-		openMap( maps.lines )
+		openmymap( maps.lines )
 	end
 
 	if key == "e" then
@@ -247,18 +248,18 @@ end
 
 function Game.mousepressed(x, y, button)
 	-- find where
-	-- 1. which cell
---~ 	local dx = math.floor(screensize[1]/Map.hcells)
---~ 	local dy = math.floor(screensize[2]/Map.vcells)
+	-- 1. which
+--~ 	local dx = math.floor(screensize[1]/mymap.hcells)
+--~ 	local dy = math.floor(screensize[2]/mymap.vcells)
 --~ 	-- force square
 --~ 	dx = dy
-	local dx,dy = Cell.width,Cell.height
+	local dx,dy = mymap.side,mymap.side
 	local cx = math.floor(x/dx)+1
 	local cy = math.floor(y/dy)+1
 	local lx = x%dx
 	local ly = y%dy
 
-	if cx>Map.hcells or cy>Map.vcells then
+	if cx>mymap.hcells or cy>mymap.vcells then
 		-- outside of map: ignore
 		return
 	end
@@ -266,37 +267,37 @@ function Game.mousepressed(x, y, button)
 	if gamemode == 1 then
 
 		if love.keyboard.isDown("lshift") and button == "l" then
-			Map[cx][cy].corridor = not Map[cx][cy].corridor
+			mymap[cx][cy].corridor = not mymap[cx][cy].corridor
 			return
 		end
 
 		if lx>ly and (dx-lx)>ly then -- upper wall
 			-- switch wall
 			if button == "l" then
-				if Map[cx][cy].u == 0 then
-					Map[cx][cy].u = 1
+				if mymap[cx][cy].u == 0 then
+					mymap[cx][cy].u = 1
 					if cy>1 then
-						Map[cx][cy-1].d = 1
+						mymap[cx][cy-1].d = 1
 					end
 				else
-					Map[cx][cy].u = 0
+					mymap[cx][cy].u = 0
 					if cy>1 then
-						Map[cx][cy-1].d = 0
+						mymap[cx][cy-1].d = 0
 					end
 				end
 			end
 
 			-- switch door
 			if button == "r" then
-				if Map[cx][cy].u == 2 then
-					Map[cx][cy].u = 3
+				if mymap[cx][cy].u == 2 then
+					mymap[cx][cy].u = 3
 					if cy>1 then
-						Map[cx][cy-1].d = 3
+						mymap[cx][cy-1].d = 3
 					end
 				else
-					Map[cx][cy].u = 2
+					mymap[cx][cy].u = 2
 					if cy>1 then
-						Map[cx][cy-1].d = 2
+						mymap[cx][cy-1].d = 2
 					end
 				end
 			end
@@ -306,30 +307,30 @@ function Game.mousepressed(x, y, button)
 		if lx>ly and (dx-lx)<=ly then -- right wall
 			-- switch wall
 			if button == "l" then
-				if Map[cx][cy].r == 0 then
-					Map[cx][cy].r = 1
-					if cx<Map.hcells then
-						Map[cx+1][cy].l = 1
+				if mymap[cx][cy].r == 0 then
+					mymap[cx][cy].r = 1
+					if cx<mymap.hcells then
+						mymap[cx+1][cy].l = 1
 					end
 				else
-					Map[cx][cy].r = 0
-					if cx<Map.hcells then
-						Map[cx+1][cy].l = 0
+					mymap[cx][cy].r = 0
+					if cx<mymap.hcells then
+						mymap[cx+1][cy].l = 0
 					end
 				end
 			end
 
 			-- switch door
 			if button == "r" then
-				if Map[cx][cy].r == 2 then
-					Map[cx][cy].r = 3
-					if cx<Map.hcells then
-						Map[cx+1][cy].l = 3
+				if mymap[cx][cy].r == 2 then
+					mymap[cx][cy].r = 3
+					if cx<mymap.hcells then
+						mymap[cx+1][cy].l = 3
 					end
 				else
-					Map[cx][cy].r = 2
-					if cx<Map.hcells then
-						Map[cx+1][cy].l = 2
+					mymap[cx][cy].r = 2
+					if cx<mymap.hcells then
+						mymap[cx+1][cy].l = 2
 					end
 				end
 			end
@@ -338,30 +339,30 @@ function Game.mousepressed(x, y, button)
 		if lx<ly and  lx<=(dy-ly) then -- left wall
 			-- switch wall
 			if button == "l" then
-				if Map[cx][cy].l == 0 then
-					Map[cx][cy].l = 1
+				if mymap[cx][cy].l == 0 then
+					mymap[cx][cy].l = 1
 					if cx>1 then
-						Map[cx-1][cy].r = 1
+						mymap[cx-1][cy].r = 1
 					end
 				else
-					Map[cx][cy].l = 0
+					mymap[cx][cy].l = 0
 					if cx>1 then
-						Map[cx-1][cy].r = 0
+						mymap[cx-1][cy].r = 0
 					end
 				end
 			end
 
 			-- switch door
 			if button == "r" then
-				if Map[cx][cy].l == 2 then
-					Map[cx][cy].l = 3
+				if mymap[cx][cy].l == 2 then
+					mymap[cx][cy].l = 3
 					if cx>1 then
-						Map[cx-1][cy].r = 3
+						mymap[cx-1][cy].r = 3
 					end
 				else
-					Map[cx][cy].l = 2
+					mymap[cx][cy].l = 2
 					if cx>1 then
-						Map[cx-1][cy].r = 2
+						mymap[cx-1][cy].r = 2
 					end
 				end
 			end
@@ -369,30 +370,30 @@ function Game.mousepressed(x, y, button)
 		if lx<ly and lx>(dy-ly) then -- down wall
 			-- switch wall
 			if button == "l" then
-				if Map[cx][cy].d == 0 then
-					Map[cx][cy].d = 1
-					if cy<Map.vcells then
-						Map[cx][cy+1].u = 1
+				if mymap[cx][cy].d == 0 then
+					mymap[cx][cy].d = 1
+					if cy<mymap.vcells then
+						mymap[cx][cy+1].u = 1
 					end
 				else
-					Map[cx][cy].d = 0
-					if cy<Map.vcells then
-						Map[cx][cy+1].u = 0
+					mymap[cx][cy].d = 0
+					if cy<mymap.vcells then
+						mymap[cx][cy+1].u = 0
 					end
 				end
 			end
 
 			-- switch door
 			if button == "r" then
-				if Map[cx][cy].d == 2 then
-					Map[cx][cy].d = 3
-					if cy<Map.vcells then
-						Map[cx][cy+1].u = 3
+				if mymap[cx][cy].d == 2 then
+					mymap[cx][cy].d = 3
+					if cy<mymap.vcells then
+						mymap[cx][cy+1].u = 3
 					end
 				else
-					Map[cx][cy].d = 2
-					if cy<Map.vcells then
-						Map[cx][cy+1].u = 2
+					mymap[cx][cy].d = 2
+					if cy<mymap.vcells then
+						mymap[cx][cy+1].u = 2
 					end
 				end
 			end
@@ -400,18 +401,18 @@ function Game.mousepressed(x, y, button)
 
 	end
 
-	if gamemode == 2 and Map[cx][cy].corridor and button == "l" then
+	if gamemode == 2 and mymap[cx][cy].corridor and button == "l" then
 		if not currentpos then currentpos = {cx,cy} end
-		mypath = findRoute( currentpos, {cx,cy}, Map )
+		mypath = findRoute( currentpos, {cx,cy}, mymap )
 		--currentpos = {cx,cy}
 	end
-	
-	if gamemode == 4 and Map[cx][cy].corridor and button == "l" then
+
+	if gamemode == 4 and mymap[cx][cy].corridor and button == "l" then
 		if not currentpos then currentpos = {cx,cy} end
-		--mypath = findRoute( currentpos, {cx,cy}, Map )
+		--mypath = findRoute( currentpos, {cx,cy}, mymap )
 		local dest = currentpos
 		if table.getn(mypath)>0 then dest = mypath[table.getn(mypath)] end
-		scheduler:addUntimedTask(RouteFinder(dest, {cx,cy}, Map, pathcont))
+		scheduler:addUntimedTask(RouteFinder(dest, {cx,cy}, mymap, pathcont))
 --~ 		currentpos = {cx,cy}
 	end
 end

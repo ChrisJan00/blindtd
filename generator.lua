@@ -33,10 +33,9 @@ function generateMapWRooms()
 	-- door closed: 3
 	-- door blocked: 4
 
---~ 	map.hcells = 20
---~ 	map.vcells = 20
-	map.hcells = Map.hcells
-	map.vcells = Map.vcells
+	map.hcells = 20
+	map.vcells = 20
+	map.side = math.min(math.floor(love.graphics.getWidth()/map.hcells),math.floor(love.graphics.getHeight()/map.vcells))
 
 	for i=1,map.hcells do
 		map[i]={}
