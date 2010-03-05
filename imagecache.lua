@@ -18,8 +18,6 @@
 
 -- love must be present
 
--- todo: create scheduled version of map cacher using this class also
-
 ImageCache = class(function(c,w,h)
 	c.width = w or love.graphics.getWidth()
 	c.height = h or love.graphics.getHeight()

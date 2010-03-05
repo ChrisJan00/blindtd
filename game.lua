@@ -25,6 +25,7 @@ function Game.load()
 	love.filesystem.load("routefinder.lua")()
 
 	mymap = generateMapWRooms()
+	mycachedmap = {}
 
 	love.graphics.setBackgroundColor(0,0,48)
 	love.graphics.setColor(0,160,160)
@@ -44,9 +45,13 @@ function Game.load()
 	pathcont={ path={} }
 	mypath={}
 	mytext=""
+	scheduler:addUntimedTask(MapCacher(mymap,mycachedmap))
+	fps = 0
+	show_fps = false
 end
 
 function Game.update(dt)
+	fps = fps*0.99 + 0.01 * 1.0 / dt
 
 	if gamemode == 3 then
 		local fx,fy,tx,ty
@@ -69,7 +74,7 @@ function Game.update(dt)
 
 	if gamemode == 4 then
 		-- 60 FPS
-		scheduler:iteration(1.0/60.0)
+		scheduler:iteration(1.0/40.0)
 
 		if table.getn(pathcont.path)>0 then
 			for i,v in ipairs(pathcont.path) do
@@ -105,7 +110,10 @@ end
 
 
 function Game.draw()
-	Map.draw(mymap)
+--~ 	Map.draw(mymap)
+	if mycachedmap.cached_map then
+		mycachedmap.cached_map:blit()
+	end
 
 	if gamemode == 2 then
 		drawchar(currentpos)
@@ -121,18 +129,23 @@ function Game.draw()
 	end
 
 	if gamemode == 4 then
-		drawpath(mypath)
+		--drawpath(mypath)
+		drawchar(currentpos)
 	end
 
 	drawtext()
 	drawscanlines()
+
+	if show_fps then
+		love.graphics.print(fps, 482, 20)
+	end
 
 end
 
 function drawchar( c )
 
 	if not c then return end
-	local dx,dy = map.side,map.side
+	local dx,dy = mymap.side,mymap.side
 
 	love.graphics.setColor(188,168,0)
 	love.graphics.rectangle("fill" , (c[1]-1)*dx+1,(c[2]-1)*dy+1,dx-1,dy-1 )

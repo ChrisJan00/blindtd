@@ -18,6 +18,9 @@
 --     along with Blind Tower Defense  If not, see <http://www.gnu.org/licenses/>.
 
 
+-- todo: create scheduled version of map cacher using this class also
+
+
 Map={}
 
 function Map.draw(map)
@@ -115,4 +118,59 @@ function Map.drawMap(where,map)
 			end
 		end
 	end
+end
+
+MapCacher = class(GenericVisitor,function(cache, map, container)
+		cache.cached_map = ImageCache()
+		cache.current_map = map
+		cache.ready = false
+		cache.container = container
+	end)
+
+function MapCacher:reset_loop()
+	self.i = 1
+	self.j = 1
+end
+
+function MapCacher:iteration(dt)
+	if self.ready then return true end
+
+	love.graphics.setLineWidth(2)
+	local dx,dy=self.current_map.side,self.current_map.side
+
+
+	if  not self.current_map[self.i][self.j].corridor then
+		self.cached_map:drawRectangle((self.i-1)*dx+1,(self.j-1)*dy+1,self.i*dx-2,self.j*dy-2,{0,48,48,255} )
+	end
+	if self.current_map[self.i][self.j].corridor then
+		-- walls
+		if self.current_map[self.i][self.j].u==0 then
+			self.cached_map:drawStraightLine((self.i-1)*dx-1,(self.j-1)*dy-1,self.i*dx,(self.j-1)*dy-1,{0,160,160,255})
+		end
+		if self.current_map[self.i][self.j].l==0 then
+			self.cached_map:drawStraightLine((self.i-1)*dx-1,(self.j-1)*dy-1,(self.i-1)*dx-1,self.j*dy,{0,160,160,255})
+		end
+		if self.current_map[self.i][self.j].d==0 then
+			self.cached_map:drawStraightLine((self.i-1)*dx-1,self.j*dy-1,self.i*dx,self.j*dy-1,{0,160,160,255})
+		end
+		if self.current_map[self.i][self.j].r==0 then
+			self.cached_map:drawStraightLine(self.i*dx-1,(self.j-1)*dy-1,self.i*dx-1,self.j*dy,{0,160,160,255})
+		end
+	end
+
+	self.i = self.i + 1
+	if self.i>self.current_map.hcells then
+		self.i = 1
+		self.j = self.j + 1
+		if self.j>self.current_map.vcells then
+			self.ready = true
+		end
+	end
+
+	return self.ready
+end
+
+function MapCacher:finish_loop()
+	self.container.cached_map = self.cached_map
+	self.cached_map = nil
 end

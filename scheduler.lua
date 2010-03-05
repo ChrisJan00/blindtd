@@ -159,8 +159,13 @@ function Scheduler:iteration(max_delay)
 			task = self.sleepingTasks:getNext()
 		end
 
-		-- Timed tasks
+		-- see how many tasks are alife
 		local taskcount = self.timedTasks.n + self.untimedTasks.n
+		if taskcount == 0 then
+			break
+		end
+
+		-- Timed tasks
 		if self.timedTasks.n > 0 then
 			task = self.timedTasks:getFirst()
 			while task do
