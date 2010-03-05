@@ -90,9 +90,6 @@ end)
 
 
 function TimedTask:checkActive()
-	-- calling superclass method does not work, copypasting the code
- 	-- self._base:checkActive()
-
 	local stopwatch = love.timer.getTime()
 	self.dt = stopwatch - self.stopwatch
 	self.stopwatch = stopwatch

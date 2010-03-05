@@ -23,7 +23,7 @@ Game = {}
 function Game.load()
 	love.filesystem.load("map.lua")()
 	love.filesystem.load("routefinder.lua")()
---~ 	mymap = generatemymap()
+
 	mymap = generateMapWRooms()
 
 	love.graphics.setBackgroundColor(0,0,48)
@@ -36,7 +36,7 @@ function Game.load()
 	-- 4 scheduler test
 	gamemode = 4
 	step_counter = 0
-	step_size = 0.012
+	step_size = 0.08
 	tabledelay = 0
 	listdelay = 0
 
@@ -82,19 +82,13 @@ function Game.update(dt)
 			if fx~=tx and fy~=ty and mymap[fx][fy].corridor and mymap[tx][ty].corridor then break end
 		end
 
---~ 		if step_counter == 0 then
 			local starttimet = love.timer.getTime()
---~ 			mypath = findRoute_tables( {fx,fy}, {tx,ty}, mymap )
 			local routedelayt =  love.timer.getTime() - starttimet
 			tabledelay = 0.99*tabledelay + 0.01*routedelayt
---~ 		else
 			local starttimel = love.timer.getTime()
 			mypath = findRoute( {fx,fy}, {tx,ty}, mymap )
 			local routedelayl =  love.timer.getTime() - starttimel
 			listdelay = 0.99*listdelay + 0.01*routedelayl
---~ 		end
---~ 		step_counter = 1-step_counter
---~ 		print(routedelay.." "..meandelay)
 	end
 
 	if gamemode == 4 then
@@ -135,12 +129,10 @@ end
 
 
 function Game.draw()
-	--drawCachedmymap(mymap)
 	Map.draw(mymap)
 
 	if gamemode == 2 then
 		drawchar(currentpos)
---~ 		drawpath(mypath)
 	end
 
 	if gamemode == 3 then
@@ -153,12 +145,7 @@ function Game.draw()
 	end
 
 	if gamemode == 4 then
---~ 		drawchar(currentpos)
 		drawpath(mypath)
-
---~ 		love.graphics.setColor(255,255,255,255)
---~ 		love.graphics.print(table.getn(mypath), 482,20)
-
 	end
 
 	drawtext()
@@ -187,14 +174,6 @@ function drawpath( p )
 end
 
 function drawscanlines()
-
---~ 	local i
---~ 	local shalf = math.floor( screensize[2]/2)
---~ 	love.graphics.setColor(0,0,0,128)
---~ 	love.graphics.setLine(1,"rough" )
---~ 	for i=1,shalf do
---~ 		love.graphics.line(0,i*2-1,screensize[1],i*2-1)
---~ 	end
 
 	-- todo: cache generation should go somewhere else (load method?)
 	if not cached_scanlines then
@@ -231,10 +210,6 @@ function Game.keypressed(key)
 		savemymap( mymap )
 	end
 
-	if key == "l" then
-		openmymap( maps.lines )
-	end
-
 	if key == "e" then
 		gamemode = gamemode + 1
 		if gamemode > 2 then gamemode = 1 end
@@ -247,12 +222,7 @@ end
 
 
 function Game.mousepressed(x, y, button)
-	-- find where
-	-- 1. which
---~ 	local dx = math.floor(screensize[1]/mymap.hcells)
---~ 	local dy = math.floor(screensize[2]/mymap.vcells)
---~ 	-- force square
---~ 	dx = dy
+
 	local dx,dy = mymap.side,mymap.side
 	local cx = math.floor(x/dx)+1
 	local cy = math.floor(y/dy)+1
@@ -404,16 +374,13 @@ function Game.mousepressed(x, y, button)
 	if gamemode == 2 and mymap[cx][cy].corridor and button == "l" then
 		if not currentpos then currentpos = {cx,cy} end
 		mypath = findRoute( currentpos, {cx,cy}, mymap )
-		--currentpos = {cx,cy}
 	end
 
 	if gamemode == 4 and mymap[cx][cy].corridor and button == "l" then
 		if not currentpos then currentpos = {cx,cy} end
-		--mypath = findRoute( currentpos, {cx,cy}, mymap )
 		local dest = currentpos
 		if table.getn(mypath)>0 then dest = mypath[table.getn(mypath)] end
 		scheduler:addUntimedTask(RouteFinder(dest, {cx,cy}, mymap, pathcont))
---~ 		currentpos = {cx,cy}
 	end
 end
 

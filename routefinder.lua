@@ -129,8 +129,6 @@ function findRoute(from, to, map)
 		-- push it to the path
 		nextpoint = {item[2][1],item[2][2]}
 		table.insert(path,1,{nextpoint[1],nextpoint[2]})
-		-- we can skip it the next time we are searching
---~ 		visitedlist:removeCurrent()
 	end
 
 	visitedlist:discard()
@@ -229,8 +227,6 @@ function RouteFinder:iteration(dt)
 			-- push it to the path
 			self.nextpoint = {self.item[2][1],self.item[2][2]}
 			table.insert(self.path,1,{self.nextpoint[1],self.nextpoint[2]})
-			-- we can skip it the next time we are searching
-			-- self.visitedlist:removeCurrent()
 		end
 	end
 

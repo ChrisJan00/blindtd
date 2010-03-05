@@ -19,7 +19,6 @@
 -- love must be present
 
 -- todo: create scheduled version of map cacher using this class also
--- todo: rectangles should not overwrite, but draw on top using alpha
 
 ImageCache = class(function(c,w,h)
 	c.width = w or love.graphics.getWidth()

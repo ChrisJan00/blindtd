@@ -147,7 +147,6 @@ function List:removeCurrent()
 	if self.current.next and self.current.prev then
 		self.current.next.prev = self.current.prev
 		self.current.prev.next = self.current.next
---~ 		self.current = self.current.next
 		self.current.ref = nil
 		self.n = self.n - 1
 		return
@@ -158,7 +157,6 @@ function List:removeCurrent()
 		self.first = self.first.next
 		self.first.prev = nil
 		self.current.next = nil
---~ 		self.current = self.first
 		self.current.ref = nil
 		self.n = self.n - 1
 		return
@@ -169,7 +167,6 @@ function List:removeCurrent()
 		self.last = self.last.prev
 		self.last.next = nil
 		self.current.prev = nil
---~ 		self.current = self.last
 		self.current.ref = nil
 		self.n = self.n - 1
 		return
