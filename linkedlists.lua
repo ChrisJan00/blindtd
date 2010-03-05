@@ -173,6 +173,12 @@ function List:removeCurrent()
 	end
 end
 
+function List:remove(ref)
+	elem = self:getFirst()
+	while elem and elem ~= ref do elem=self:getNext() end
+	if elem then self:removeCurrent() end
+end
+
 -- insert after current
 function List:insert(obj, value)
 	if not value then value=0 end
@@ -273,6 +279,9 @@ if false then
 	list:pushBack("abc")
 	list:pushBack("cde")
 	list:pushBack("def")
+	list:pushBack("fgh")
+
+	list:remove("cde")
 
 	-- print
 	elem = list:getFirst()
