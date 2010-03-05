@@ -150,21 +150,15 @@ function drawpath( p )
 end
 
 function drawscanlines()
-
-	-- todo: cache generation should go somewhere else (load method?)
 	if not cached_scanlines then
-		-- pad the image?
-		local scanlines_data = love.image.newImageData(screensize[1],screensize[2])
-		local i,j
+		cached_scanlines = ImageCache()
+		local i
 		local shalf = math.floor( screensize[2]/2 )
-		for j=1,shalf do
-			for i=1,screensize[1] do
-				scanlines_data:setPixel(i,j*2,0,0,0,128)
-			end
+		for i=1,shalf do
+			cached_scanlines:drawStraightLine(0,i*2,screensize[1],i*2,{0,0,0,128},1)
 		end
-		cached_scanlines = love.graphics.newImage( scanlines_data )
 	end
-	love.graphics.draw(cached_scanlines,0,0)
+	cached_scanlines:blit()
 end
 
 function myprint(t)
