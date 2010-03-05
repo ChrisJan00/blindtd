@@ -1,9 +1,20 @@
 
+- actuators:  they have a radius ( euclidian or manhattan )
+  - there is an actuator map that holds lists of references to the cells covered by the actuators
+    (for example, all cells in the radius of actuator A have a reference to A in their lists)
+  - when an entity moves, all the actuators of the cell that is abandoned are notified of the abandon
+  - when an entity moves, all the actuators of the new cell are notified of the entry
+  - the actuator first processes all the abandons removing them from its own list of references to entities, then the enters
+  - finally, the actuator performs an action depending on this list.  Examples:
+    - doors: if there is at least one enity at sight, open
+	- guns: choose one victim at random and fire it
+	- ¨superguns": shoot all the victims in sight
+	- mine: if there is at least one victim, explode
+	- timebomb:  if the time is over, explode.  All victims affected
+	- sensor: report amount of victims detected
 
-- move to lua 0.6 for blitting the whole map into a static image
 
 - doors that open and close
-- cleanup (erase old unused code)
 - orders: be able to give a list of orders to the character, he will follow them in sequence.  Also, cancel order,
 break list, prioritize...
 - enemies!  that move
@@ -16,10 +27,6 @@ break list, prioritize...
 - several rooms
 
 =======
-- improve algorithms:  A* should be able to give partial paths and resume computation
-- A* with linked lists (sorting by insertion)
-- move to lua 0.6 for blitting the whole map into a static image
-- blit the scanlines
 - doors (automatic)
 - aliens
 - scent
@@ -49,8 +56,6 @@ break list, prioritize...
 - flooding passage
   - histories paraleles?  supervivents?
 
-
-- scanline impact check (loop of lines VS static image)
 - change map size in screen
 - (radar) animation of the guy walking in the screen
 - door animation (open/close)

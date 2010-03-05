@@ -18,9 +18,6 @@
 --     along with Blind Tower Defense  If not, see <http://www.gnu.org/licenses/>.
 
 
--- todo: create scheduled version of map cacher using this class also
-
-
 Map={}
 
 function Map.draw(map)
