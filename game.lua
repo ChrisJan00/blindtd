@@ -48,30 +48,6 @@ end
 
 function Game.update(dt)
 
-	if gamemode == 2 then
-		local do_step = false
-		local nsteps = 1
-		if step_counter>0 then
-			step_counter = step_counter - dt
-		end
-		if step_counter<=0 then
-			do_step = true
-			nsteps = math.floor(math.abs(step_counter/step_size))+1
-			step_counter = step_size
-		end
-
-		if mypath and do_step then
-			if table.getn(mypath)>0 then
-				if nsteps>table.getn(mypath) then nsteps=table.getn(mypath) end
-				currentpos = mypath[nsteps]
-				local i
-				for i=1,nsteps do
-					table.remove(mypath,1)
-				end
-			end
-		end
-	end
-
 	if gamemode == 3 then
 		local fx,fy,tx,ty
 		while true do
@@ -203,17 +179,9 @@ end
 
 function Game.keypressed(key)
 	if key == "escape" then
-		love.system.exit()
+		love.event.push('q')
 	end
 
-	if key == "s" then
-		savemymap( mymap )
-	end
-
-	if key == "e" then
-		gamemode = gamemode + 1
-		if gamemode > 2 then gamemode = 1 end
-	end
 end
 
 
@@ -234,147 +202,6 @@ function Game.mousepressed(x, y, button)
 		return
 	end
 
-	if gamemode == 1 then
-
-		if love.keyboard.isDown("lshift") and button == "l" then
-			mymap[cx][cy].corridor = not mymap[cx][cy].corridor
-			return
-		end
-
-		if lx>ly and (dx-lx)>ly then -- upper wall
-			-- switch wall
-			if button == "l" then
-				if mymap[cx][cy].u == 0 then
-					mymap[cx][cy].u = 1
-					if cy>1 then
-						mymap[cx][cy-1].d = 1
-					end
-				else
-					mymap[cx][cy].u = 0
-					if cy>1 then
-						mymap[cx][cy-1].d = 0
-					end
-				end
-			end
-
-			-- switch door
-			if button == "r" then
-				if mymap[cx][cy].u == 2 then
-					mymap[cx][cy].u = 3
-					if cy>1 then
-						mymap[cx][cy-1].d = 3
-					end
-				else
-					mymap[cx][cy].u = 2
-					if cy>1 then
-						mymap[cx][cy-1].d = 2
-					end
-				end
-			end
-		end
-
-
-		if lx>ly and (dx-lx)<=ly then -- right wall
-			-- switch wall
-			if button == "l" then
-				if mymap[cx][cy].r == 0 then
-					mymap[cx][cy].r = 1
-					if cx<mymap.hcells then
-						mymap[cx+1][cy].l = 1
-					end
-				else
-					mymap[cx][cy].r = 0
-					if cx<mymap.hcells then
-						mymap[cx+1][cy].l = 0
-					end
-				end
-			end
-
-			-- switch door
-			if button == "r" then
-				if mymap[cx][cy].r == 2 then
-					mymap[cx][cy].r = 3
-					if cx<mymap.hcells then
-						mymap[cx+1][cy].l = 3
-					end
-				else
-					mymap[cx][cy].r = 2
-					if cx<mymap.hcells then
-						mymap[cx+1][cy].l = 2
-					end
-				end
-			end
-		end
-
-		if lx<ly and  lx<=(dy-ly) then -- left wall
-			-- switch wall
-			if button == "l" then
-				if mymap[cx][cy].l == 0 then
-					mymap[cx][cy].l = 1
-					if cx>1 then
-						mymap[cx-1][cy].r = 1
-					end
-				else
-					mymap[cx][cy].l = 0
-					if cx>1 then
-						mymap[cx-1][cy].r = 0
-					end
-				end
-			end
-
-			-- switch door
-			if button == "r" then
-				if mymap[cx][cy].l == 2 then
-					mymap[cx][cy].l = 3
-					if cx>1 then
-						mymap[cx-1][cy].r = 3
-					end
-				else
-					mymap[cx][cy].l = 2
-					if cx>1 then
-						mymap[cx-1][cy].r = 2
-					end
-				end
-			end
-		end
-		if lx<ly and lx>(dy-ly) then -- down wall
-			-- switch wall
-			if button == "l" then
-				if mymap[cx][cy].d == 0 then
-					mymap[cx][cy].d = 1
-					if cy<mymap.vcells then
-						mymap[cx][cy+1].u = 1
-					end
-				else
-					mymap[cx][cy].d = 0
-					if cy<mymap.vcells then
-						mymap[cx][cy+1].u = 0
-					end
-				end
-			end
-
-			-- switch door
-			if button == "r" then
-				if mymap[cx][cy].d == 2 then
-					mymap[cx][cy].d = 3
-					if cy<mymap.vcells then
-						mymap[cx][cy+1].u = 3
-					end
-				else
-					mymap[cx][cy].d = 2
-					if cy<mymap.vcells then
-						mymap[cx][cy+1].u = 2
-					end
-				end
-			end
-		end
-
-	end
-
-	if gamemode == 2 and mymap[cx][cy].corridor and button == "l" then
-		if not currentpos then currentpos = {cx,cy} end
-		mypath = findRoute( currentpos, {cx,cy}, mymap )
-	end
 
 	if gamemode == 4 and mymap[cx][cy].corridor and button == "l" then
 		if not currentpos then currentpos = {cx,cy} end
