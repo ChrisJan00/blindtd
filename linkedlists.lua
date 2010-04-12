@@ -48,6 +48,10 @@ function List:discard()
 	self.n = 0
 end
 
+function List:count()
+	return self.n
+end
+
 -- push and pop functions
 function List:pushFront(obj, value)
 	if not value then value=0 end

@@ -35,7 +35,7 @@ function Game.load()
 	-- 2 move guy
 	-- 3 speed test
 	-- 4 scheduler test
-	gamemode = 4
+	gamemode = 5
 	step_counter = 0
 	step_size = 0.08
 	tabledelay = 0
@@ -48,6 +48,24 @@ function Game.load()
 	scheduler:addUntimedTask(MapCacher(mymap,mycachedmap))
 	fps = 0
 	show_fps = false
+
+	-- set a random initial position
+	local i
+	for i=1,mymap.hcells do
+		if mymap[i][mymap.vcells].corridor then currentpos = {i,mymap.vcells}
+		break
+		end
+	end
+
+	player = { pos=currentpos }
+
+--~ 	initScent(mymap)
+	scentTask = ScentTask(mymap, player)
+	scheduler:addTimedTask(scentTask,0.08)
+--~  	launchEnemy(scentTask)
+	enemyTask = EnemyTask(scentTask)
+	scheduler:addTimedTask(enemyTask,0.08)
+	enemy_timer = 3
 end
 
 function Game.update(dt)
@@ -104,6 +122,62 @@ function Game.update(dt)
 				end
 			end
 		end
+
+		player.pos = currentpos
+
+	end
+
+	if gamemode == 5 then
+		-- 60 FPS
+		scheduler:iteration(1.0/40.0)
+
+		if table.getn(pathcont.path)>0 then
+			for i,v in ipairs(pathcont.path) do
+				table.insert(mypath,v)
+			end
+			pathcont.path = {}
+		end
+
+		local do_step = false
+		local nsteps = 1
+		if step_counter>0 then
+			step_counter = step_counter - dt
+		end
+		if step_counter<=0 then
+			do_step = true
+			nsteps = math.floor(math.abs(step_counter/step_size))+1
+			step_counter = step_size
+		end
+
+		if mypath and do_step then
+			if table.getn(mypath)>0 then
+				if nsteps>table.getn(mypath) then nsteps=table.getn(mypath) end
+				currentpos = mypath[nsteps]
+				local i
+				for i=1,nsteps do
+					--scentTask:markPlayer(mypath[1])
+					scentTask:mark(mypath[1],Player_scent)
+					table.remove(mypath,1)
+				end
+			end
+		end
+
+		player.pos = currentpos
+
+		-- scent test
+--~ 		switchScent()
+
+--~ 		if currentpos then
+--~ 			playerScent(currentpos)
+--~ 		end
+
+--~ 		moveEnemies()
+--~ 		updateScent()
+
+		if enemy_timer > 0 then enemy_timer = enemy_timer - dt
+		if enemy_timer <=0 then enemyTask:launchEnemy()
+		enemy_timer = 10 end end
+
 	end
 
 end
@@ -132,6 +206,20 @@ function Game.draw()
 		--drawpath(mypath)
 		drawchar(currentpos)
 	end
+
+	if gamemode == 5 then
+		-- scent test
+--~ 		drawScent()
+
+--~ 		drawScent(mymap,scentTask.current_map)
+		scentTask:draw()
+--~ 		drawEnemies()
+		enemyTask:drawEnemies()
+
+		--drawpath(mypath)
+		drawchar(player.pos)
+	end
+
 
 	drawtext()
 	drawscanlines()
@@ -211,6 +299,13 @@ function Game.mousepressed(x, y, button)
 
 
 	if gamemode == 4 and mymap[cx][cy].corridor and button == "l" then
+		if not currentpos then currentpos = {cx,cy} end
+		local dest = currentpos
+		if table.getn(mypath)>0 then dest = mypath[table.getn(mypath)] end
+		scheduler:addUntimedTask(RouteFinder(dest, {cx,cy}, mymap, pathcont))
+	end
+
+	if gamemode == 5 and mymap[cx][cy].corridor and button == "l" then
 		if not currentpos then currentpos = {cx,cy} end
 		local dest = currentpos
 		if table.getn(mypath)>0 then dest = mypath[table.getn(mypath)] end

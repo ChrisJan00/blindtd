@@ -1,0 +1,250 @@
+-- Blind Tower Defense (temporal name)
+-- Copyright 2009 Iwan Gabovitch, Christiaan Janssen, September 2009
+--
+-- This file is part of Blind Tower Defense
+--
+--     Blind Tower Defense is free software: you can redistribute it and/or modify
+--     it under the terms of the GNU General Public License as published by
+--     the Free Software Foundation, either version 3 of the License, or
+--     (at your option) any later version.
+--
+--     Blind Tower Defense is distributed in the hope that it will be useful,
+--     but WITHOUT ANY WARRANTY; without even the implied warranty of
+--     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--     GNU General Public License for more details.
+--
+--     You should have received a copy of the GNU General Public License
+--     along with Blind Tower Defense  If not, see <http://www.gnu.org/licenses/>.
+
+-- enemy list
+Scent = {}
+
+Player_scent = 10
+Enemy_scent = -0.1
+Blow_scent = -10
+Scent_diffusion = 0.95
+Center_weight = 1
+Prob_move = 0.98
+
+
+
+--------------------------------------------------
+ScentTask=class(GenericVisitor,function(scent, map, player_ref)
+	scent.hcells = map.hcells
+	scent.vcells = map.vcells
+	scent.current_map = {}
+	scent.next_map = {}
+	scent.ref_map = map
+	local i,j
+	for j=1,scent.hcells do
+		scent.current_map[j]={}
+		scent.next_map[j]={}
+		for i=1,scent.vcells do
+			scent.current_map[j][i]=0
+			scent.next_map[j][i]=0
+		end
+	end
+
+	scent.player = player_ref
+end)
+
+function ScentTask:reset_loop()
+	self.i = 1
+	self.j = 1
+	self.player_marked = false
+	if self.enemies then self.enemy = self.enemies:getFirst() end
+end
+
+
+function ScentTask:mark(pos, scent)
+	self.next_map[pos[1]][pos[2]] = self.next_map[pos[1]][pos[2]]+scent
+end
+
+function ScentTask:iteration(dt)
+	if not self.player_marked then
+		-- always mark the current position
+		self:mark(self.player.pos, Player_scent)
+		self.player_marked = true
+	else
+		if self.ref_map[self.i][self.j].corridor then
+			local sum = self.current_map[self.i][self.j] * Center_weight
+			local count = Center_weight
+			if self.i>1 and self.ref_map[self.i-1][self.j].corridor then
+				sum = sum + self.current_map[self.i-1][self.j]
+				count = count + 1
+			end
+			if self.j>1 and self.ref_map[self.i][self.j-1].corridor then
+				sum = sum + self.current_map[self.i][self.j-1]
+				count = count + 1
+			end
+			if self.i<self.hcells and self.ref_map[self.i+1][self.j].corridor then
+				sum = sum + self.current_map[self.i+1][self.j]
+				count = count + 1
+			end
+			if self.j<self.vcells and self.ref_map[self.i][self.j+1].corridor then
+				sum = sum + self.current_map[self.i][self.j+1]
+				count = count + 1
+			end
+			self.next_map[self.i][self.j] = self.next_map[self.i][self.j] + sum/count
+			self.next_map[self.i][self.j] = self.next_map[self.i][self.j] * Scent_diffusion
+		end
+		self.i = self.i+1
+		if self.i>self.hcells then
+			self.i = 1
+			self.j = self.j+1
+			if self.j>self.vcells then return true end
+		end
+	end
+
+	return false
+end
+
+function ScentTask:finish_loop()
+	local i,j
+	local tmp = self.current_map
+	self.current_map = self.next_map
+	self.next_map = tmp
+	for j=1,self.hcells do
+		for i=1,self.vcells do
+			self.next_map[j][i]=0
+		end
+	end
+end
+
+
+function ScentTask:draw()
+	local i,j
+	for i=1,self.ref_map.hcells do
+		for j=1,self.ref_map.vcells do
+			if self.ref_map[i][j].corridor then
+
+				local dx,dy =  self.ref_map.side, self.ref_map.side
+
+				local fraction = self.current_map[i][j]*5
+				if fraction < 0 then
+					love.graphics.setColor(0,0,math.abs(fraction))
+				else
+					love.graphics.setColor(fraction,0,0)
+				end
+				love.graphics.rectangle("fill" , (i-1)*dx+1,(j-1)*dy+1,dx-1,dy-1 )
+
+			end
+		end
+	end
+end
+
+--------------------------------------------------
+
+Enemies = List()
+EnemyTask=class(GenericVisitor,function(self, scentVisitor)
+	self.enemies = List()
+	self.scents = scentVisitor
+end)
+
+function EnemyTask:reset_loop()
+	self.enemy = self.enemies:getFirst()
+end
+
+function EnemyTask:iteration(dt)
+	if self.enemy then
+		self:updateEnemy()
+		self.enemy = self.enemies:getNext()
+	end
+	if self.enemy then
+		return false
+	else
+		return true
+	end
+end
+
+function EnemyTask:updateEnemy()
+	local map = self.scents.ref_map
+	local scentmap = self.scents.current_map
+	local enemy = self.enemy
+	local newdir = List()
+
+	if map[enemy.pos[1]][enemy.pos[2]].u>0 then
+		newdir:pushFrontSorted(1,scentmap[enemy.pos[1]][enemy.pos[2]-1])
+	end
+	if map[enemy.pos[1]][enemy.pos[2]].d>0 then
+		newdir:pushFrontSorted(2,scentmap[enemy.pos[1]][enemy.pos[2]+1])
+	end
+	if map[enemy.pos[1]][enemy.pos[2]].l>0 then
+		newdir:pushFrontSorted(3,scentmap[enemy.pos[1]-1][enemy.pos[2]])
+	end
+	if map[enemy.pos[1]][enemy.pos[2]].r>0 then
+		newdir:pushFrontSorted(4,scentmap[enemy.pos[1]+1][enemy.pos[2]])
+	end
+
+	elem = newdir:getLast()
+	while elem and math.random()>Prob_move do
+		elem = newdir:getPrev()
+	end
+
+	if not elem then elem=newdir:getFirst() end
+
+	local randchoice = elem
+
+	local lastscent = scentmap[enemy.pos[1]][enemy.pos[2]]
+	if randchoice == 1 then
+		enemy.pos = { enemy.pos[1], enemy.pos[2]-1 }
+	end
+
+	if randchoice == 2 then
+		enemy.pos = { enemy.pos[1], enemy.pos[2]+1 }
+	end
+
+	if randchoice == 3 then
+		enemy.pos = { enemy.pos[1]-1, enemy.pos[2] }
+	end
+
+	if randchoice == 4 then
+		enemy.pos = { enemy.pos[1]+1, enemy.pos[2] }
+	end
+	local newscent = scentmap[enemy.pos[1]][enemy.pos[2]]
+
+ 	--enemy.Scents.next_map[enemy.pos[1]][enemy.pos[2]] = enemy.Scents.next_map[enemy.pos[1]][enemy.pos[2]] + Enemy_scent
+	self.scents:mark(enemy.pos, Enemy_scent)
+end
+
+function EnemyTask:launchEnemy()
+	-- create a new enemy at the start position
+	local epos, i
+	for i=1,self.scents.ref_map.hcells do
+		if self.scents.ref_map[i][1].corridor then
+			epos = {i,1}
+			break
+		end
+	end
+
+	local enemy = {
+		pos = {epos[1],epos[2]},
+		lastdir = 1
+	}
+
+	self.enemies:pushBack(enemy)
+
+end
+
+
+function EnemyTask:enemyDie()
+	-- newscent(currentpos) - K2 (K2=1?)
+	--enemy.Scents.next_map[pos[1]][pos[2]] = enemy.Scents.next_map[pos[1]][pos[2]]+Blow_scent
+	self.scents:mark(enemy.pos, Blow_scent)
+end
+
+
+function EnemyTask:drawEnemies()
+	local elem = self.enemies:getFirst()
+	while elem do
+
+		local dx,dy = self.scents.ref_map.side,self.scents.ref_map.side
+		local i,j = elem.pos[1],elem.pos[2]
+
+		love.graphics.setColor(0,200,0)
+		love.graphics.rectangle("fill" , (i-1)*dx+1,(j-1)*dy+1,dx-1,dy-1 )
+
+		elem = self.enemies:getNext()
+	end
+end
+
