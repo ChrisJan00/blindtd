@@ -64,7 +64,7 @@ function Game.load()
 	scheduler:addTimedTask(scentTask,0.08)
 --~  	launchEnemy(scentTask)
 	enemyTask = EnemyTask(scentTask)
-	scheduler:addTimedTask(enemyTask,0.08)
+	scheduler:addTimedTask(enemyTask,0.38)
 	enemy_timer = 3
 end
 

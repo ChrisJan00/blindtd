@@ -20,7 +20,7 @@
 Scent = {}
 
 Player_scent = 10
-Enemy_scent = -0.1
+Enemy_scent = -1
 Blow_scent = -10
 Scent_diffusion = 0.95
 Center_weight = 1
@@ -163,6 +163,8 @@ function EnemyTask:updateEnemy()
 	local enemy = self.enemy
 	local newdir = List()
 
+	self.scents:mark(enemy.pos, Enemy_scent)
+
 	if map[enemy.pos[1]][enemy.pos[2]].u>0 then
 		newdir:pushFrontSorted(1,scentmap[enemy.pos[1]][enemy.pos[2]-1])
 	end
@@ -204,7 +206,7 @@ function EnemyTask:updateEnemy()
 	local newscent = scentmap[enemy.pos[1]][enemy.pos[2]]
 
  	--enemy.Scents.next_map[enemy.pos[1]][enemy.pos[2]] = enemy.Scents.next_map[enemy.pos[1]][enemy.pos[2]] + Enemy_scent
-	self.scents:mark(enemy.pos, Enemy_scent)
+
 end
 
 function EnemyTask:launchEnemy()
