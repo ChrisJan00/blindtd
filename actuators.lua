@@ -54,6 +54,14 @@ function activateActuator( who )
 	end
 end
 
+function leaveActuator( who )
+	local ref = Actuators_map[who.pos[1]][who.pos[2]]:getFirst()
+	while ref do
+		ref:leave( who )
+		ref = Actuators_map[who.pos[1]][who.pos[2]]:getNext()
+	end
+end
+
 -------------------
 
 -- actuator class
@@ -78,6 +86,24 @@ end
 
 function Actuator:activate( who )
 end
+
+function Actuator:leave( who )
+end
+
+--------------------------
+MachineGun = class(Actuator,function(act)
+end)
+
+function MachineGun:set(pos)
+	-- save own data
+	local radius
+	self._base:set(pos,radius)
+	-- restore own data
+end
+--------------------------
+Door = class(Actuator,function(act)
+end)
+
 
 --------------------------
 -- there is a map where each cell is a list of references to an actuator instance

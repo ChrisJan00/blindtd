@@ -84,8 +84,15 @@ if false then
 		self.i = self.i+20
 	end
 
-	function B:callinc()
+	function B:callselfinc()
 		self:inc()
+	end
+
+	function B:callparentinc()
+		-- self._base does not have i, we have to copy it around
+		self._base.i = self.i
+		self._base:inc()
+		self.i = self._base.i
 	end
 
 	inst = A()
