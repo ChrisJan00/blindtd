@@ -50,7 +50,7 @@ function permutation( len )
 end
 
 -- The algorithm (in one single function)
-function findRoute(from, to, map)
+function findRoute(from, to, map, cap)
 	local routeslist = List()
 	local visitedlist = List()
 	local found = false
@@ -77,34 +77,38 @@ function findRoute(from, to, map)
 			break
 		end
 
-		-- up
-		if elem[2]>1 and (map[elem[1]][elem[2]].u==1 or map[elem[1]][elem[2]].u==2)
-			and not visited_marks[elem[1]][elem[2]-1] then
-			local newdist = distanceMh({elem[1],elem[2]-1},to)+steps
-			routeslist:pushFrontSorted({{elem[1],elem[2]-1},{elem[1],elem[2]},steps+1},newdist)
-			visited_marks[elem[1]][elem[2]-1]=1
+		-- cap: maximum allowed steps (nil means infinite)
+		if (not cap) or (steps<cap) then
+			-- up
+			if elem[2]>1 and (map[elem[1]][elem[2]].u==1 or map[elem[1]][elem[2]].u==2)
+				and not visited_marks[elem[1]][elem[2]-1] then
+				local newdist = distanceMh({elem[1],elem[2]-1},to)+steps
+				routeslist:pushFrontSorted({{elem[1],elem[2]-1},{elem[1],elem[2]},steps+1},newdist)
+				visited_marks[elem[1]][elem[2]-1]=1
+			end
+			-- down
+			if elem[2]<map.vcells and (map[elem[1]][elem[2]].d==1 or map[elem[1]][elem[2]].d==2)
+				and not visited_marks[elem[1]][elem[2]+1] then
+				local newdist = distanceMh({elem[1],elem[2]+1},to)+steps
+				routeslist:pushFrontSorted({{elem[1],elem[2]+1},{elem[1],elem[2]},steps+1},newdist)
+				visited_marks[elem[1]][elem[2]+1]=1
+			end
+			-- left
+			if elem[1]>1 and (map[elem[1]][elem[2]].l==1 or map[elem[1]][elem[2]].l==2)
+				and not visited_marks[elem[1]-1][elem[2]] then
+				local newdist = distanceMh({elem[1]-1,elem[2]},to)+steps
+				routeslist:pushFrontSorted({{elem[1]-1,elem[2]},{elem[1],elem[2]},steps+1},newdist)
+				visited_marks[elem[1]-1][elem[2]]=1
+			end
+			-- right
+			if elem[1]<map.hcells and (map[elem[1]][elem[2]].r==1 or map[elem[1]][elem[2]].r==2)
+				and not visited_marks[elem[1]+1][elem[2]] then
+				local newdist = distanceMh({elem[1]+1,elem[2]},to)+steps
+				routeslist:pushFrontSorted({{elem[1]+1,elem[2]},{elem[1],elem[2]},steps+1},newdist)
+				visited_marks[elem[1]+1][elem[2]]=1
+			end
 		end
-		-- down
-		if elem[2]<map.vcells and (map[elem[1]][elem[2]].d==1 or map[elem[1]][elem[2]].d==2)
-			and not visited_marks[elem[1]][elem[2]+1] then
-			local newdist = distanceMh({elem[1],elem[2]+1},to)+steps
-			routeslist:pushFrontSorted({{elem[1],elem[2]+1},{elem[1],elem[2]},steps+1},newdist)
-			visited_marks[elem[1]][elem[2]+1]=1
-		end
-		-- left
-		if elem[1]>1 and (map[elem[1]][elem[2]].l==1 or map[elem[1]][elem[2]].l==2)
-			and not visited_marks[elem[1]-1][elem[2]] then
-			local newdist = distanceMh({elem[1]-1,elem[2]},to)+steps
-			routeslist:pushFrontSorted({{elem[1]-1,elem[2]},{elem[1],elem[2]},steps+1},newdist)
-			visited_marks[elem[1]-1][elem[2]]=1
-		end
-		-- right
-		if elem[1]<map.hcells and (map[elem[1]][elem[2]].r==1 or map[elem[1]][elem[2]].r==2)
-			and not visited_marks[elem[1]+1][elem[2]] then
-			local newdist = distanceMh({elem[1]+1,elem[2]},to)+steps
-			routeslist:pushFrontSorted({{elem[1]+1,elem[2]},{elem[1],elem[2]},steps+1},newdist)
-			visited_marks[elem[1]+1][elem[2]]=1
-		end
+
 	end
 
 	routeslist:discard()
@@ -139,11 +143,12 @@ end
 
 -- scheduler-friendly version
 
-RouteFinder = class(GenericVisitor,function(rf,from,to,map,pathcontainer)
+RouteFinder = class(GenericVisitor,function(rf,from,to,map,pathcontainer, cap)
 	rf.from = from
 	rf.to = to
 	rf.map = map
 	rf.pathcontainer = pathcontainer
+	rf.cap = cap
 end)
 
 function RouteFinder:reset_loop()
@@ -180,33 +185,36 @@ function RouteFinder:iteration(dt)
 			self.found = true
 		else
 
-			-- up
-			if elem[2]>1 and (map[elem[1]][elem[2]].u==1 or map[elem[1]][elem[2]].u==2)
-				and not self.visited_marks[elem[1]][elem[2]-1] then
-				local newdist = distanceMh({elem[1],elem[2]-1},to)+steps
-				self.routeslist:pushFrontSorted({{elem[1],elem[2]-1},{elem[1],elem[2]},steps+1},newdist)
-				self.visited_marks[elem[1]][elem[2]-1]=1
-			end
-			-- down
-			if elem[2]<map.vcells and (map[elem[1]][elem[2]].d==1 or map[elem[1]][elem[2]].d==2)
-				and not self.visited_marks[elem[1]][elem[2]+1] then
-				local newdist = distanceMh({elem[1],elem[2]+1},to)+steps
-				self.routeslist:pushFrontSorted({{elem[1],elem[2]+1},{elem[1],elem[2]},steps+1},newdist)
-				self.visited_marks[elem[1]][elem[2]+1]=1
-			end
-			-- left
-			if elem[1]>1 and (map[elem[1]][elem[2]].l==1 or map[elem[1]][elem[2]].l==2)
-				and not self.visited_marks[elem[1]-1][elem[2]] then
-				local newdist = distanceMh({elem[1]-1,elem[2]},to)+steps
-				self.routeslist:pushFrontSorted({{elem[1]-1,elem[2]},{elem[1],elem[2]},steps+1},newdist)
-				self.visited_marks[elem[1]-1][elem[2]]=1
-			end
-			-- right
-			if elem[1]<map.hcells and (map[elem[1]][elem[2]].r==1 or map[elem[1]][elem[2]].r==2)
-				and not self.visited_marks[elem[1]+1][elem[2]] then
-				local newdist = distanceMh({elem[1]+1,elem[2]},to)+steps
-				self.routeslist:pushFrontSorted({{elem[1]+1,elem[2]},{elem[1],elem[2]},steps+1},newdist)
-				self.visited_marks[elem[1]+1][elem[2]]=1
+			-- cap is maximum number of steps (nil for infinite)
+			if (not self.cap) or (steps < self.cap) then
+				-- up
+				if elem[2]>1 and (map[elem[1]][elem[2]].u==1 or map[elem[1]][elem[2]].u==2)
+					and not self.visited_marks[elem[1]][elem[2]-1] then
+					local newdist = distanceMh({elem[1],elem[2]-1},to)+steps
+					self.routeslist:pushFrontSorted({{elem[1],elem[2]-1},{elem[1],elem[2]},steps+1},newdist)
+					self.visited_marks[elem[1]][elem[2]-1]=1
+				end
+				-- down
+				if elem[2]<map.vcells and (map[elem[1]][elem[2]].d==1 or map[elem[1]][elem[2]].d==2)
+					and not self.visited_marks[elem[1]][elem[2]+1] then
+					local newdist = distanceMh({elem[1],elem[2]+1},to)+steps
+					self.routeslist:pushFrontSorted({{elem[1],elem[2]+1},{elem[1],elem[2]},steps+1},newdist)
+					self.visited_marks[elem[1]][elem[2]+1]=1
+				end
+				-- left
+				if elem[1]>1 and (map[elem[1]][elem[2]].l==1 or map[elem[1]][elem[2]].l==2)
+					and not self.visited_marks[elem[1]-1][elem[2]] then
+					local newdist = distanceMh({elem[1]-1,elem[2]},to)+steps
+					self.routeslist:pushFrontSorted({{elem[1]-1,elem[2]},{elem[1],elem[2]},steps+1},newdist)
+					self.visited_marks[elem[1]-1][elem[2]]=1
+				end
+				-- right
+				if elem[1]<map.hcells and (map[elem[1]][elem[2]].r==1 or map[elem[1]][elem[2]].r==2)
+					and not self.visited_marks[elem[1]+1][elem[2]] then
+					local newdist = distanceMh({elem[1]+1,elem[2]},to)+steps
+					self.routeslist:pushFrontSorted({{elem[1]+1,elem[2]},{elem[1],elem[2]},steps+1},newdist)
+					self.visited_marks[elem[1]+1][elem[2]]=1
+				end
 			end
 		end
 	elseif self.found then
@@ -240,5 +248,9 @@ end
 function RouteFinder:finish_loop()
 	self.routeslist:discard()
 	self.visitedlist:discard()
-	self.pathcontainer.path = self.path
+	if table.getn(self.path) > 0 then
+		self.pathcontainer.path = self.path
+	else
+		self.pathcontainer.path = nil
+	end
 end

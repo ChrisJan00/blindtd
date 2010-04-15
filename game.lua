@@ -66,6 +66,8 @@ function Game.load()
 	enemyTask = EnemyTask(scentTask)
 	scheduler:addTimedTask(enemyTask,0.38)
 	enemy_timer = 3
+
+	touched = 0
 end
 
 function Game.update(dt)
@@ -223,6 +225,8 @@ function Game.draw()
 
 	drawtext()
 	drawscanlines()
+
+	love.graphics.print(touched,482,40)
 
 	if show_fps then
 		love.graphics.print(fps, 482, 20)

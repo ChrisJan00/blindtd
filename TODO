@@ -17,8 +17,8 @@
 - doors that open and close
 - orders: be able to give a list of orders to the character, he will follow them in sequence.  Also, cancel order,
 break list, prioritize...
-- enemies!  that move
-- scent!
+- enemies!  that move OK
+- scent! OK
 - weapons
 - radar
 - personal info
@@ -28,8 +28,8 @@ break list, prioritize...
 
 =======
 - doors (automatic)
-- aliens
-- scent
+- aliens OK
+- scent OK
 - instructions for the player (list of tasks)
 - block doors
 - turrets

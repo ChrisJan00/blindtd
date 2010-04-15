@@ -206,6 +206,10 @@ function EnemyTask:updateEnemy()
 	local newscent = scentmap[enemy.pos[1]][enemy.pos[2]]
 
  	--enemy.Scents.next_map[enemy.pos[1]][enemy.pos[2]] = enemy.Scents.next_map[enemy.pos[1]][enemy.pos[2]] + Enemy_scent
+	if enemy.pos[1]==self.scents.player.pos[1] and enemy.pos[2]==self.scents.player.pos[2] then
+		touched = touched + 1
+		self.enemies:remove(enemy)
+	end
 
 end
 
