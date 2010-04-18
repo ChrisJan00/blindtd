@@ -58,7 +58,7 @@ function Game.load()
 		end
 	end
 
-	player = { pos=currentpos }
+	player = Player()
 
 --~ 	initScent(mymap)
 	scentTask = ScentTask(mymap, player)
@@ -67,7 +67,7 @@ function Game.load()
 
 	----------- actuators
 	actuatorList = ActuatorList(mymap)
-	while actuatorList.list.n < 3 do
+	while actuatorList.list.n < 1 do
 		local pos = {math.random(20),math.random(20)}
 		if mymap[pos[1]][pos[2]].corridor then actuatorList:addBomb(pos) end
 	end
@@ -79,6 +79,10 @@ function Game.load()
 
 	touched = 0
 end
+
+Player = class(function(p)
+	p.pos=currentpos
+end)
 
 function Game.update(dt)
 	fps = fps*0.99 + 0.01 * 1.0 / dt
@@ -135,7 +139,9 @@ function Game.update(dt)
 			end
 		end
 
+
 		player.pos = currentpos
+--~ 		actuatorList.actmap:enter(player)
 
 	end
 
@@ -143,7 +149,19 @@ function Game.update(dt)
 		-- 60 FPS
 		scheduler:iteration(1.0/40.0)
 
-		if table.getn(pathcont.path)>0 then
+		Game.movePlayer(dt)
+
+
+		if enemy_timer > 0 then enemy_timer = enemy_timer - dt
+		if enemy_timer <=0 then enemyTask:launchEnemy()
+		enemy_timer = 10 end end
+
+	end
+
+end
+
+function Game.movePlayer(dt)
+	if table.getn(pathcont.path)>0 then
 			for i,v in ipairs(pathcont.path) do
 				table.insert(mypath,v)
 			end
@@ -174,24 +192,14 @@ function Game.update(dt)
 			end
 		end
 
-		player.pos = currentpos
+		if player.pos ~= currentpos then
+			actuatorList.actmap:leave(player)
+			player.pos = currentpos
+			actuatorList.actmap:enter(player)
+		end
+end
 
-		-- scent test
---~ 		switchScent()
-
---~ 		if currentpos then
---~ 			playerScent(currentpos)
---~ 		end
-
---~ 		moveEnemies()
---~ 		updateScent()
-
-		if enemy_timer > 0 then enemy_timer = enemy_timer - dt
-		if enemy_timer <=0 then enemyTask:launchEnemy()
-		enemy_timer = 10 end end
-
-	end
-
+function Player:die()
 end
 
 function Game.draw()
@@ -229,7 +237,7 @@ function Game.draw()
 	drawtext()
 	drawscanlines()
 
-	love.graphics.print(touched,482,40)
+--~ 	love.graphics.print(touched,482,40)
 
 	if show_fps then
 		love.graphics.print(fps, 482, 20)
@@ -275,7 +283,7 @@ end
 
 function drawtext()
 	love.graphics.setColor(200,200,200)
-	love.graphics.print(mytext, 480, 10)
+	love.graphics.print(mytext, 480, 20)
 end
 
 

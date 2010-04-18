@@ -93,20 +93,24 @@ end
 
 function Actuator:fill()
 	self.cellslist = List()
-	self.cellslist:pushFront( self.pos,0 )
+	self.cellslist:pushFront( {self.pos[1],self.pos[2]},0 )
 	local elem = self.cellslist:getFirst()
 	while elem do
 		local newradius = self.cellslist.current.val+1
-		if self.actmap.refmap[elem[1]][elem[2]].u>0 and newradius<= self.radius and not self.cellslist:contains(elem) then
+		if self.actmap.refmap[elem[1]][elem[2]].u>0 and newradius<= self.radius
+			and not self.cellslist:containsContents({elem[1],elem[2]-1}) then
 			self.cellslist:pushBack({elem[1],elem[2]-1},newradius)
 		end
-		if self.actmap.refmap[elem[1]][elem[2]].d>0 and newradius<= self.radius and not self.cellslist:contains(elem) then
+		if self.actmap.refmap[elem[1]][elem[2]].d>0 and newradius<= self.radius
+			and not self.cellslist:containsContents({elem[1],elem[2]+1}) then
 			self.cellslist:pushBack({elem[1],elem[2]+1},newradius)
 		end
-		if self.actmap.refmap[elem[1]][elem[2]].l>0 and newradius<= self.radius and not self.cellslist:contains(elem) then
+		if self.actmap.refmap[elem[1]][elem[2]].l>0 and newradius<= self.radius
+			and not self.cellslist:containsContents({elem[1]-1,elem[2]}) then
 			self.cellslist:pushBack({elem[1]-1,elem[2]},newradius)
 		end
-		if self.actmap.refmap[elem[1]][elem[2]].r>0 and newradius<= self.radius and not self.cellslist:contains(elem) then
+		if self.actmap.refmap[elem[1]][elem[2]].r>0 and newradius<= self.radius
+			and not self.cellslist:containsContents({elem[1]+1,elem[2]}) then
 			self.cellslist:pushBack({elem[1]+1,elem[2]},newradius)
 		end
 		elem = self.cellslist:getNext()
@@ -121,7 +125,6 @@ function Actuator:leave( who )
 end
 
 --------------------------
--- todo: a class on its own
 ActuatorList = class( function (self, refmap)
 	self.list = List()
 	self.actmap = ActuatorMap(refmap)
@@ -150,6 +153,7 @@ end)
 
 --------------------------
 DeathPoint = class(Actuator, function(act, pos, actuatormap)
+	-- todo: there is some bug at the filling algorithm that makes the thing hang
 	act._base.init(act, pos, 3, actuatormap)
 	end)
 

@@ -277,12 +277,37 @@ function List:changeValue(value)
 	self.current = oldprev
 end
 
--- returns true if the value is already contained
+-- returns true if a reference to the same object is already contained
 function List:contains( obj )
 	local old_current = self.current
 	local elem = self:getFirst()
 	while elem do
-		if elem==what then
+		if elem==obj then
+			self.current = old_current
+			return true
+		end
+		elem = self:getNext()
+	end
+
+	self.current = old_current
+	return false
+end
+
+-- the same, but assumes obj is a table and compares its contents instead
+function List:containsContents( obj )
+	local function comparecontents(a,b)
+		local i
+		if table.getn(a) ~= table.getn(b) then return false end
+		for i=1,table.getn(a) do
+			if a[i]~=b[i] then return false end
+		end
+		return true
+	end
+
+	local old_current = self.current
+	local elem = self:getFirst()
+	while elem do
+		if comparecontents(elem,obj) then
 			self.current = old_current
 			return true
 		end
@@ -305,7 +330,7 @@ end
 
 
 --~ -- Example of use (make the condition true to test)
-if false then
+if true then
 	list = List()
 	list:pushBack("abc")
 	list:pushBack("cde")
