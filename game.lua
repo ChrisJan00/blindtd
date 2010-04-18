@@ -35,6 +35,7 @@ function Game.load()
 	-- 2 move guy
 	-- 3 speed test
 	-- 4 scheduler test
+	-- 5 development
 	gamemode = 5
 	step_counter = 0
 	step_size = 0.08
@@ -184,7 +185,6 @@ function Game.update(dt)
 
 end
 
-
 function Game.draw()
 --~ 	Map.draw(mymap)
 	if mycachedmap.cached_map then
@@ -210,15 +210,8 @@ function Game.draw()
 	end
 
 	if gamemode == 5 then
-		-- scent test
---~ 		drawScent()
-
---~ 		drawScent(mymap,scentTask.current_map)
 		scentTask:draw()
---~ 		drawEnemies()
 		enemyTask:drawEnemies()
-
-		--drawpath(mypath)
 		drawchar(player.pos)
 	end
 
@@ -260,7 +253,7 @@ function drawscanlines()
 		local i
 		local shalf = math.floor( screensize[2]/2 )
 		for i=1,shalf do
-			cached_scanlines:drawStraightLine(0,i*2,screensize[1],i*2,{0,0,0,128},1)
+			cached_scanlines:drawStraightLine(0,i*2-1,screensize[1]-1,i*2-1,{0,0,0,128},1)
 		end
 	end
 	cached_scanlines:blit()
@@ -278,7 +271,7 @@ end
 
 function Game.keypressed(key)
 	if key == "escape" then
-		love.event.push('q')
+		quit()
 	end
 
 end

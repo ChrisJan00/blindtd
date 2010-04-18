@@ -21,15 +21,20 @@
 ImageCache = class(function(c,w,h)
 	c.width = w or love.graphics.getWidth()
 	c.height = h or love.graphics.getHeight()
-	c.imagedata = love.image.newImageData(c.width,c.height)
+	-- some displays want imagedata dimensions to be power of two...
+	c.widthP2 = math.pow(2,(math.floor(math.log(c.width)/math.log(2))+1))
+	c.heightP2 = math.pow(2,(math.floor(math.log(c.height)/math.log(2))+1))
+	c.imagedata = love.image.newImageData(c.widthP2,c.heightP2)
 	c.image = love.graphics.newImage(c.imagedata)
 	c.modified = false
 end)
 
--- this is a shallow copy.  For a deep copy use "region"
+-- this is a shallow copy.  For a deep copy use "drawImage"
 function ImageCache:copy(source)
 	self.width = source.width
 	self.height = source.height
+	self.widthP2 = source.widthP2
+	self.heightP2 = source.heightP2
 	self.imagedata = source.imagedata
 	self.image = source.image
 	self.modified = source.modified

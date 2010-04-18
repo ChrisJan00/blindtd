@@ -20,6 +20,10 @@ function love.filesystem.require(filename)
 	g()
 end
 
+function quit()
+	love.event.push('q')
+end
+
 function love.load()
 
 	-- Dependencies
@@ -40,7 +44,7 @@ function love.load()
 	-- Init graphics mode
        screensize = { 640, 480 }
 	if not love.graphics.setMode( screensize[1], screensize[2], false, true, 0 ) then
-		love.system.exit()
+		quit()
 	end
 
 	-- Audio system
