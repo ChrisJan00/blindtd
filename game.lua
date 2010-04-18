@@ -79,6 +79,9 @@ function Game.load()
 	enemyTask = EnemyTask(scentTask, actuatorList.actmap)
 	scheduler:addTimedTask(enemyTask,0.18)
 	enemy_timer = 3
+	enemy_launcher = false
+
+	actuatorList.actmap:enter(player)
 
 	touched = 0
 end
@@ -171,7 +174,7 @@ function Game.update(dt)
 
 
 		if enemy_timer > 0 then enemy_timer = enemy_timer - dt
-		if enemy_timer <=0 then enemyTask:launchEnemy()
+		if enemy_timer <=0 and enemy_launcher then enemyTask:launchEnemy()
 		enemy_timer = 2.5 end end
 
 	end

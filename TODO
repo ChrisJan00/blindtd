@@ -1,3 +1,14 @@
+- doors: check door code to find the bug, the whole thing goes crazy!
+- I think the bug is in findroute, it is assumed that a valid path is always  returned.  Since the algorithm can't
+find routes across closed doors now, it returns some shit that makes the whole thing go crazy.
+- the colors could be weird interactions between the door codes and the scent code (although I thought
+scent was ignoring doors)
+- check all the old code to find how it behaves with the new door code (like, being able to pass through closed doors
+because of lack of checking that condition)
+- probably it would be better to remap 0. wall, 1. blocked door, 2. closed door, 3. open door
+- two types of pathfinding: ignoring closed doors (because they will open) and considering them (for example with actuators)
+- cleanup game.lua, there are a lot of new helper functions that nead clearing
+- cleanup actuators (and check the other files) for sorting the functions
 
 - actuators:  they have a radius ( euclidian or manhattan )
   - there is an actuator map that holds lists of references to the cells covered by the actuators

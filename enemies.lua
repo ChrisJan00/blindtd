@@ -212,7 +212,9 @@ function EnemyTask:updateEnemy()
  	--enemy.Scents.next_map[enemy.pos[1]][enemy.pos[2]] = enemy.Scents.next_map[enemy.pos[1]][enemy.pos[2]] + Enemy_scent
 	if enemy.pos[1]==self.scents.player.pos[1] and enemy.pos[2]==self.scents.player.pos[2] then
 		touched = touched + 1
+		self.actuatorsmap:leave( enemy )
 		self.enemies:remove(enemy)
+
 	end
 
 end
@@ -231,6 +233,8 @@ function EnemyTask:launchEnemy()
 
 	self.enemies:pushBack(enemy)
 
+	actuatorList.actmap:enter(enemy)
+
 end
 
 Enemy = class( function( e, pos, task )
@@ -241,6 +245,7 @@ end)
 
 function Enemy:die()
 	self.task.scents:mark(self.pos,Blow_scent)
+	actuatorList.actmap:leave(self)
 	self.task.enemies:remove(self)
 end
 

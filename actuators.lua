@@ -53,9 +53,7 @@ end
 function ActuatorMap:enter( who )
 	local ref = self.map[who.pos[1]][who.pos[2]]:getFirst()
 	while ref do
-		if findRoute( ref.pos, who.pos, self.refmap, ref.radius) then
-			ref:activate( who )
-		end
+		ref:activate( who )
 		ref = self.map[who.pos[1]][who.pos[2]]:getNext()
 	end
 end
@@ -172,9 +170,9 @@ Door = class(Actuator,function(door, pos, orientation, open_percent, actuatormap
 	--act._base.init(act, pos, 3, actuatormap)
 	door.actmap = actuatormap
 	door.orientation = orientation
-	door.radius = 2
+	door.radius = 1
 	door.pos = {pos[1],pos[2]}
-	door.detected = 0
+	door.detected = List()
 	-- it takes 0.5 seconds to open
 	door.open_velocity = 1/0.5
 	door.open_percent = open_percent
@@ -188,34 +186,38 @@ function Door:fill()
 
 	-- add the other side
 	if self.orientation == 1 and self.actmap.refmap[self.pos[1]][self.pos[2]].u>0 then
+		self.backpos = {self.pos[1], self.pos[2]-1}
 		self.cellslist:pushBack( {self.pos[1], self.pos[2]-1}, 0)
 	end
 	if self.orientation == 2 and self.actmap.refmap[self.pos[1]][self.pos[2]].d>0 then
+		self.backpos = {self.pos[1], self.pos[2]+1}
 		self.cellslist:pushBack( {self.pos[1], self.pos[2]+1}, 0)
 	end
 	if self.orientation == 3 and self.actmap.refmap[self.pos[1]][self.pos[2]].l>0 then
+		self.backpos = {self.pos[1]-1, self.pos[2]}
 		self.cellslist:pushBack( {self.pos[1]-1, self.pos[2]}, 0)
 	end
 	if self.orientation == 4 and self.actmap.refmap[self.pos[1]][self.pos[2]].r>0 then
+		self.backpos = {self.pos[1]+1, self.pos[2]}
 		self.cellslist:pushBack( {self.pos[1]+1, self.pos[2]}, 0)
 	end
 
 	local elem = self.cellslist:getFirst()
 	while elem do
 		local newradius = self.cellslist.current.val+1
-		if self.actmap.refmap[elem[1]][elem[2]].u>0 and newradius< self.radius
+		if self.actmap.refmap[elem[1]][elem[2]].u>0 and newradius<= self.radius
 			and not self.cellslist:containsContents({elem[1],elem[2]-1}) then
 			self.cellslist:pushBack({elem[1],elem[2]-1},newradius)
 		end
-		if self.actmap.refmap[elem[1]][elem[2]].d>0 and newradius< self.radius
+		if self.actmap.refmap[elem[1]][elem[2]].d>0 and newradius<= self.radius
 			and not self.cellslist:containsContents({elem[1],elem[2]+1}) then
 			self.cellslist:pushBack({elem[1],elem[2]+1},newradius)
 		end
-		if self.actmap.refmap[elem[1]][elem[2]].l>0 and newradius< self.radius
+		if self.actmap.refmap[elem[1]][elem[2]].l>0 and newradius<= self.radius
 			and not self.cellslist:containsContents({elem[1]-1,elem[2]}) then
 			self.cellslist:pushBack({elem[1]-1,elem[2]},newradius)
 		end
-		if self.actmap.refmap[elem[1]][elem[2]].r>0 and newradius< self.radius
+		if self.actmap.refmap[elem[1]][elem[2]].r>0 and newradius<= self.radius
 			and not self.cellslist:containsContents({elem[1]+1,elem[2]}) then
 			self.cellslist:pushBack({elem[1]+1,elem[2]},newradius)
 		end
@@ -225,11 +227,15 @@ function Door:fill()
 end
 
 function Door:activate( who )
-	self.detected = self.detected + 1
+	if (not self.detected:contains(who)) and (findRoute( self.pos, who.pos, self.actmap.refmap, self.radius) or
+		findRoute(self.backpos, who.pos, self.actmap.refmap, self.radius))
+	then
+		self.detected:pushBack(who)
+	end
 end
 
 function Door:leave(who)
-	self.detected = self.detected - 1
+	self.detected:remove(who)
 end
 
 function Door:draw()
@@ -259,18 +265,20 @@ function Door:draw()
 end
 
 function Door:update(dt)
-	if self.detected > 0 and self.open_percent < 1 then
+	if self.detected.n > 0 and self.open_percent < 1 then
 		self.open_percent = self.open_percent + dt * self.open_velocity
-		if self.open_percent >=1 then
+	elseif self.detected.n == 0 and self.open_percent > 0 then
+		self.open_percent = self.open_percent - dt * self.open_velocity
+	end
+
+	if self.open_percent >=1 then
 		self:setInMap( 2 )
 		self.open_percent = 1
-		end
-	elseif self.detected == 0 and self.open_percent > 0 then
-		self.open_percent = self.open_percent - dt * self.open_velocity
-		if self.open_percent <=0 then
+	end
+
+	if self.open_percent <=0 then
 		self:setInMap( 3 )
 		self.open_percent = 0
-		end
 	end
 end
 
@@ -304,7 +312,9 @@ DeathPoint = class(Actuator, function(act, pos, actuatormap)
 	end)
 
 function DeathPoint:activate( who )
-	who:die()
+	if findRoute( self.pos, who.pos, self.actmap.refmap, self.radius) then
+		who:die()
+	end
 end
 
 function DeathPoint:draw()
