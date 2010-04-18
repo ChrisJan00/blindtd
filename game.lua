@@ -67,17 +67,34 @@ function Game.load()
 
 	----------- actuators
 	actuatorList = ActuatorList(mymap)
-	while actuatorList.list.n < 1 do
+	while actuatorList.list.n < 0 do
 		local pos = {math.random(20),math.random(20)}
 		if mymap[pos[1]][pos[2]].corridor then actuatorList:addBomb(pos) end
 	end
 
+	-- doors
+	addDoors()
+
 	--~  	launchEnemy(scentTask)
 	enemyTask = EnemyTask(scentTask, actuatorList.actmap)
-	scheduler:addTimedTask(enemyTask,0.38)
+	scheduler:addTimedTask(enemyTask,0.18)
 	enemy_timer = 3
 
 	touched = 0
+end
+
+function addDoors()
+	local i,j
+	for i=1,mymap.hcells-1 do
+		for j=1,mymap.vcells-1 do
+			if mymap[i][j].r == 2 or mymap[i][j].r == 3 then
+				actuatorList:addDoor({i,j}, 4, 0)
+			end
+			if mymap[i][j].d == 2 or mymap[i][j].d == 3 then
+				actuatorList:addDoor({i,j}, 2, 0)
+			end
+		end
+	end
 end
 
 Player = class(function(p)
@@ -149,12 +166,13 @@ function Game.update(dt)
 		-- 60 FPS
 		scheduler:iteration(1.0/40.0)
 
+		actuatorList:update(dt)
 		Game.movePlayer(dt)
 
 
 		if enemy_timer > 0 then enemy_timer = enemy_timer - dt
 		if enemy_timer <=0 then enemyTask:launchEnemy()
-		enemy_timer = 10 end end
+		enemy_timer = 2.5 end end
 
 	end
 

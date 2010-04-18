@@ -21,7 +21,7 @@ Scent = {}
 
 Player_scent = 10
 Enemy_scent = -1
-Blow_scent = -10
+Blow_scent = -100
 Scent_diffusion = 0.95
 Center_weight = 1
 Prob_move = 0.98
