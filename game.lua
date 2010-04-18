@@ -63,8 +63,17 @@ function Game.load()
 --~ 	initScent(mymap)
 	scentTask = ScentTask(mymap, player)
 	scheduler:addTimedTask(scentTask,0.08)
---~  	launchEnemy(scentTask)
-	enemyTask = EnemyTask(scentTask)
+
+
+	----------- actuators
+	actuatorList = ActuatorList(mymap)
+	while actuatorList.list.n < 3 do
+		local pos = {math.random(20),math.random(20)}
+		if mymap[pos[1]][pos[2]].corridor then actuatorList:addBomb(pos) end
+	end
+
+	--~  	launchEnemy(scentTask)
+	enemyTask = EnemyTask(scentTask, actuatorList.actmap)
 	scheduler:addTimedTask(enemyTask,0.38)
 	enemy_timer = 3
 
@@ -212,6 +221,7 @@ function Game.draw()
 	if gamemode == 5 then
 		scentTask:draw()
 		enemyTask:drawEnemies()
+		actuatorList:draw()
 		drawchar(player.pos)
 	end
 

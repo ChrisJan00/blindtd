@@ -20,6 +20,7 @@
 
 ActuatorMap = class( function(acts, refmap)
 	acts.refmap = refmap
+	acts.map = {}
 	acts:init()
 end)
 
@@ -27,7 +28,7 @@ function ActuatorMap:init()
 	local i,j
 	for i=1,self.refmap.hcells do
 		self.map[i]={}
-		for j=1,self.map.vcells do
+		for j=1,self.refmap.vcells do
 			self.map[i][j]=List()
 		end
 	end
@@ -52,7 +53,7 @@ end
 function ActuatorMap:enter( who )
 	local ref = self.map[who.pos[1]][who.pos[2]]:getFirst()
 	while ref do
-		if findRoute( self.pos, who.pos, self.refmap, ref.radius) then
+		if findRoute( ref.pos, who.pos, self.refmap, ref.radius) then
 			ref:activate( who )
 		end
 		ref = self.map[who.pos[1]][who.pos[2]]:getNext()
@@ -95,7 +96,7 @@ function Actuator:fill()
 	self.cellslist:pushFront( self.pos,0 )
 	local elem = self.cellslist:getFirst()
 	while elem do
-		local newradius = self.current.val+1
+		local newradius = self.cellslist.current.val+1
 		if self.actmap.refmap[elem[1]][elem[2]].u>0 and newradius<= self.radius and not self.cellslist:contains(elem) then
 			self.cellslist:pushBack({elem[1],elem[2]-1},newradius)
 		end
@@ -108,8 +109,9 @@ function Actuator:fill()
 		if self.actmap.refmap[elem[1]][elem[2]].r>0 and newradius<= self.radius and not self.cellslist:contains(elem) then
 			self.cellslist:pushBack({elem[1]+1,elem[2]},newradius)
 		end
-		elem:getNext()
+		elem = self.cellslist:getNext()
 	end
+	self.actmap:add(self)
 end
 
 function Actuator:activate( who )
@@ -120,14 +122,22 @@ end
 
 --------------------------
 -- todo: a class on its own
-ActuatorList = List()
+ActuatorList = class( function (self, refmap)
+	self.list = List()
+	self.actmap = ActuatorMap(refmap)
+	self.refmap = refmap
+end)
 
 function ActuatorList:draw()
-	local elem = self:getFirst()
+	local elem = self.list:getFirst()
 	while elem do
 		elem:draw()
-		elem = self:getNext()
+		elem = self.list:getNext()
 	end
+end
+
+function ActuatorList:addBomb(pos)
+	self.list:pushBack( DeathPoint( pos, self.actmap ) )
 end
 
 --------------------------

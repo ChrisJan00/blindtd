@@ -136,9 +136,10 @@ end
 --------------------------------------------------
 
 Enemies = List()
-EnemyTask=class(GenericVisitor,function(self, scentVisitor)
+EnemyTask=class(GenericVisitor,function(self, scentVisitor, actuatorsmap)
 	self.enemies = List()
 	self.scents = scentVisitor
+	self.actuatorsmap = actuatorsmap
 end)
 
 function EnemyTask:reset_loop()
@@ -188,6 +189,8 @@ function EnemyTask:updateEnemy()
 	local randchoice = elem
 
 	local lastscent = scentmap[enemy.pos[1]][enemy.pos[2]]
+	self.actuatorsmap:leave( enemy )
+
 	if randchoice == 1 then
 		enemy.pos = { enemy.pos[1], enemy.pos[2]-1 }
 	end
@@ -204,6 +207,7 @@ function EnemyTask:updateEnemy()
 		enemy.pos = { enemy.pos[1]+1, enemy.pos[2] }
 	end
 	local newscent = scentmap[enemy.pos[1]][enemy.pos[2]]
+	self.actuatorsmap:enter( enemy )
 
  	--enemy.Scents.next_map[enemy.pos[1]][enemy.pos[2]] = enemy.Scents.next_map[enemy.pos[1]][enemy.pos[2]] + Enemy_scent
 	if enemy.pos[1]==self.scents.player.pos[1] and enemy.pos[2]==self.scents.player.pos[2] then
@@ -223,22 +227,30 @@ function EnemyTask:launchEnemy()
 		end
 	end
 
-	local enemy = {
-		pos = {epos[1],epos[2]},
-		lastdir = 1
-	}
+	local enemy = Enemy(epos, self)
 
 	self.enemies:pushBack(enemy)
 
 end
 
+Enemy = class( function( e, pos, task )
+		e.pos = pos
+		e.lastdir = 1
+		e.task = task
+end)
 
-function EnemyTask:die()
-	-- newscent(currentpos) - K2 (K2=1?)
-	--enemy.Scents.next_map[pos[1]][pos[2]] = enemy.Scents.next_map[pos[1]][pos[2]]+Blow_scent
-	self.scents:mark(enemy.pos, Blow_scent)
-	self.enemies:remove(self)
+function Enemy:die()
+	self.task.scents:mark(self.pos,Blow_scent)
+	self.task.enemies:remove(self)
 end
+
+
+--~ function EnemyTask:die()
+--~ 	-- newscent(currentpos) - K2 (K2=1?)
+--~ 	--enemy.Scents.next_map[pos[1]][pos[2]] = enemy.Scents.next_map[pos[1]][pos[2]]+Blow_scent
+--~ 	self.scents:mark(enemy.pos, Blow_scent)
+--~ 	self.enemies:remove(enemy)
+--~ end
 
 
 function EnemyTask:drawEnemies()
