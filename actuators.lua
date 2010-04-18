@@ -18,47 +18,52 @@
 
 -- actuators
 
-Actuators_map = {}
+ActuatorMap = class( function(acts, refmap)
+	acts.refmap = refmap
+	acts:init()
+end)
 
-function initActuators()
+function ActuatorMap:init()
 	local i,j
-	for i=1,20 do
-	Actuators_map[i]={}
-	for j=1,20 do
-	Actuators.map[i][j]=List()
-	end
+	for i=1,self.refmap.hcells do
+		self.map[i]={}
+		for j=1,self.map.vcells do
+			self.map[i][j]=List()
+		end
 	end
 end
 
-function addActuator(ref)
-	local cell = ref.cellslist:getFirst()
+function ActuatorMap:add(actuator)
+	local cell = actuator.cellslist:getFirst()
 	while cell do
-		Actuators_map[cell[1]][cell[2]]:pushBack(ref)
-		cell = ref.cellslist:getNext()
+		self.map[cell[1]][cell[2]]:pushBack(actuator)
+		cell = actuator.cellslist:getNext()
 	end
 end
 
-function removeActuator(ref)
-	local cell = ref.cellslist:getFirst()
+function ActuatorMap:remove(actuator)
+	local cell = actuator.cellslist:getFirst()
 	while cell do
-		Actuators_map[cell[1]][cell[2]]:remove(ref)
-		cell = ref.cellslist:getNext()
+		self.map[cell[1]][cell[2]]:remove(actuator)
+		cell = actuator.cellslist:getNext()
 	end
 end
 
-function activateActuator( who )
-	local ref = Actuators_map[who.pos[1]][who.pos[2]]:getFirst()
+function ActuatorMap:enter( who )
+	local ref = self.map[who.pos[1]][who.pos[2]]:getFirst()
 	while ref do
-		ref:activate( who )
-		ref = Actuators_map[who.pos[1]][who.pos[2]]:getNext()
+		if findRoute( self.pos, who.pos, self.refmap, ref.radius) then
+			ref:activate( who )
+		end
+		ref = self.map[who.pos[1]][who.pos[2]]:getNext()
 	end
 end
 
-function leaveActuator( who )
-	local ref = Actuators_map[who.pos[1]][who.pos[2]]:getFirst()
+function ActuatorMap:leave( who )
+	local ref = self.map[who.pos[1]][who.pos[2]]:getFirst()
 	while ref do
 		ref:leave( who )
-		ref = Actuators_map[who.pos[1]][who.pos[2]]:getNext()
+		ref = self.map[who.pos[1]][who.pos[2]]:getNext()
 	end
 end
 
@@ -77,11 +82,34 @@ end
   -- "x" will be active if at least one of the doors is open.
 -- well, we can add the actuator in these cells no matter what, and then in the activate method check if there is a valid way actually, using A*
 
-Actuator = class(function(act)
+Actuator = class(function(act, pos, radius, actuatormap)
+	act.actmap = actuatormap
+	act.radius = radius
+	act.pos = pos
+	act:fill()
 end
 )
 
-function Actuator:set(pos,radius)
+function Actuator:fill()
+	self.cellslist = List()
+	self.cellslist:pushFront( self.pos,0 )
+	local elem = self.cellslist:getFirst()
+	while elem do
+		local newradius = self.current.val+1
+		if self.actmap.refmap[elem[1]][elem[2]].u>0 and newradius<= self.radius and not self.cellslist:contains(elem) then
+			self.cellslist:pushBack({elem[1],elem[2]-1},newradius)
+		end
+		if self.actmap.refmap[elem[1]][elem[2]].d>0 and newradius<= self.radius and not self.cellslist:contains(elem) then
+			self.cellslist:pushBack({elem[1],elem[2]+1},newradius)
+		end
+		if self.actmap.refmap[elem[1]][elem[2]].l>0 and newradius<= self.radius and not self.cellslist:contains(elem) then
+			self.cellslist:pushBack({elem[1]-1,elem[2]},newradius)
+		end
+		if self.actmap.refmap[elem[1]][elem[2]].r>0 and newradius<= self.radius and not self.cellslist:contains(elem) then
+			self.cellslist:pushBack({elem[1]+1,elem[2]},newradius)
+		end
+		elem:getNext()
+	end
 end
 
 function Actuator:activate( who )
@@ -91,18 +119,41 @@ function Actuator:leave( who )
 end
 
 --------------------------
-MachineGun = class(Actuator,function(act)
+-- todo: a class on its own
+ActuatorList = List()
+
+function ActuatorList:draw()
+	local elem = self:getFirst()
+	while elem do
+		elem:draw()
+		elem = self:getNext()
+	end
+end
+
+--------------------------
+MachineGun = class(Actuator,function(act, pos, radius, actuatormap)
 end)
 
-function MachineGun:set(pos)
-	-- save own data
-	local radius
-	self._base:set(pos,radius)
-	-- restore own data
-end
 --------------------------
-Door = class(Actuator,function(act)
+Door = class(Actuator,function(act, pos, radius, actuatormap)
 end)
+
+--------------------------
+DeathPoint = class(Actuator, function(act, pos, actuatormap)
+	act._base.init(act, pos, 3, actuatormap)
+	end)
+
+function DeathPoint:activate( who )
+	who:die()
+end
+
+function DeathPoint:draw()
+	local dx,dy =  self.actmap.refmap.side, self.actmap.refmap.side
+	local i,j = self.pos[1],self.pos[2]
+
+	love.graphics.setColor(0,255,255)
+	love.graphics.rectangle("fill" , (i-1)*dx+1,(j-1)*dy+1,dx-1,dy-1 )
+end
 
 
 --------------------------

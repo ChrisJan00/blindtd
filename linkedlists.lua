@@ -277,6 +277,33 @@ function List:changeValue(value)
 	self.current = oldprev
 end
 
+-- returns true if the value is already contained
+function List:contains( obj )
+	local old_current = self.current
+	local elem = self:getFirst()
+	while elem do
+		if elem==what then
+			self.current = old_current
+			return true
+		end
+		elem = self:getNext()
+	end
+
+	self.current = old_current
+	return false
+end
+
+-- find the first object with a given value
+function List:findFirst( value )
+	local elem = self:getFirst()
+	while elem do
+		if self.current.val == value then return elem end
+		elem = self:getNext()
+	end
+	return nil
+end
+
+
 --~ -- Example of use (make the condition true to test)
 if false then
 	list = List()

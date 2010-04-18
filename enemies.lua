@@ -233,10 +233,11 @@ function EnemyTask:launchEnemy()
 end
 
 
-function EnemyTask:enemyDie()
+function EnemyTask:die()
 	-- newscent(currentpos) - K2 (K2=1?)
 	--enemy.Scents.next_map[pos[1]][pos[2]] = enemy.Scents.next_map[pos[1]][pos[2]]+Blow_scent
 	self.scents:mark(enemy.pos, Blow_scent)
+	self.enemies:remove(self)
 end
 
 

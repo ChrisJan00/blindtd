@@ -30,6 +30,7 @@ function love.load()
 	love.filesystem.require("game.lua")
 	love.filesystem.require("generator.lua")
 	love.filesystem.require("enemies.lua")
+	love.filesystem.require("actuators.lua")
 
 	-- Initialization
 	start_time = love.timer.getTime()
