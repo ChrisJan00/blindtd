@@ -79,7 +79,7 @@ function Game.load()
 	enemyTask = EnemyTask(scentTask, actuatorList.actmap)
 	scheduler:addTimedTask(enemyTask,0.18)
 	enemy_timer = 3
-	enemy_launcher = false
+	enemy_launcher = true
 
 	actuatorList.actmap:enter(player)
 
@@ -345,7 +345,7 @@ function Game.mousepressed(x, y, button)
 		if not currentpos then currentpos = {cx,cy} end
 		local dest = currentpos
 		if table.getn(mypath)>0 then dest = mypath[table.getn(mypath)] end
-		scheduler:addUntimedTask(RouteFinder(dest, {cx,cy}, mymap, pathcont))
+		scheduler:addUntimedTask(RouteFinder(dest, {cx,cy}, mymap, pathcont, nil, true))
 	end
 end
 

@@ -96,10 +96,14 @@ function TimedTask:checkActive()
 
 	self.timer = self.timer - self.dt
 	if self.timer <= 0 then
-		if self.ready and not self.finished then print("Time Out!") end
-		self.active = true
-		self.ready = false
-		self.timer = self.period
+		if self.ready and not self.finished then
+			-- skip iteration
+			print("Time Out!")
+		else
+			self.active = true
+			self.ready = false
+			self.timer = self.period
+		end
 	end
 
 	return self.active

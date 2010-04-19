@@ -3,6 +3,10 @@
 find routes across closed doors now, it returns some shit that makes the whole thing go crazy.
 - the colors could be weird interactions between the door codes and the scent code (although I thought
 scent was ignoring doors)
+- findroutes are appended, is that done correctly?
+- cannot find route through closed door...
+- activators: when a door is open, the activators for what lies behind should expand...
+
 - check all the old code to find how it behaves with the new door code (like, being able to pass through closed doors
 because of lack of checking that condition)
 - probably it would be better to remap 0. wall, 1. blocked door, 2. closed door, 3. open door
