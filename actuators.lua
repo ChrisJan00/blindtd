@@ -18,6 +18,11 @@
 
 -- actuators
 
+-- todo:  each actuator has a list of targeted entities (that could be seen)
+-- each actuator also has a list of entities actually seen, depending on open doors
+-- when a door changes status, it notifies all the actuators that see it the new status
+-- the actuators re-check their list of targeted entities, if any changes its status from unseen to seen or viceversa, it acts accordingly
+
 ActuatorMap = class( function(acts, refmap)
 	acts.refmap = refmap
 	acts.map = {}

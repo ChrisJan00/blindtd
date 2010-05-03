@@ -16,7 +16,7 @@
 --     You should have received a copy of the GNU General Public License
 --     along with Blind Tower Defense  If not, see <http://www.gnu.org/licenses/>.
 function love.filesystem.require(filename)
-	g = love.filesystem.load(filename)
+	local g = love.filesystem.load(filename)
 	g()
 end
 
@@ -31,10 +31,13 @@ function love.load()
 	love.filesystem.require("linkedlists.lua")
 	love.filesystem.require("scheduler.lua")
 	love.filesystem.require("imagecache.lua")
+	love.filesystem.require("map.lua")
+	love.filesystem.require("routefinder.lua")
 	love.filesystem.require("game.lua")
 	love.filesystem.require("generator.lua")
 	love.filesystem.require("enemies.lua")
 	love.filesystem.require("actuators.lua")
+	love.filesystem.require("player.lua")
 
 	-- Initialization
 	start_time = love.timer.getTime()
@@ -47,6 +50,10 @@ function love.load()
 		quit()
 	end
 
+	love.graphics.setBackgroundColor(0,0,48)
+	love.graphics.setColor(0,160,160)
+	love.graphics.setLine(2)
+
 	-- Audio system
 	--love.audio.setChannels(16)
 	love.audio.setVolume(.3)
@@ -55,34 +62,35 @@ function love.load()
 --~ 	love.graphics.setFont("default")
 	love.graphics.setFont(16)
 
-	Game.load()
+	game = Game()
+	game:load()
 
 end
 
 function love.update(dt)
 
-	Game.update(dt)
+	game:update(dt)
 
 end
 
 
 function love.draw()
-	Game.draw()
+	game:draw()
 end
 
 
 function love.keypressed(key)
-	Game.keypressed(key)
+	game:keypressed(key)
 end
 
 
 function love.keyreleased(key)
-	Game.keyreleased(key)
+	game:keyreleased(key)
 end
 
 
 function love.mousepressed(x, y, button)
-	Game.mousepressed(x,y,button)
+	game:mousepressed(x,y,button)
 
 end
 
@@ -90,7 +98,7 @@ end
 
 function love.mousereleased(x, y, button)
 
-	Game.mousereleased(x,y, button)
+	game:mousereleased(x,y, button)
 
 end
 

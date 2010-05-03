@@ -26,15 +26,22 @@ Scent_diffusion = 0.95
 Center_weight = 1
 Prob_move = 0.98
 
+-- todo: each enemy can have its own speed, that can change dynamically depending on status
+-- (for example, how strong is the scent)
+-- that is done with an internal timer
+
+-- also todo: enemies are stopped in front of closed doors.. if the door is blocked, they "hit" it
+-- to check: if they bounce or not... they should bounce after a while, not stay there eternally, but also
+-- not bounce automatically... maybe the scent can do that
 
 
 --------------------------------------------------
-ScentTask=class(GenericVisitor,function(scent, map, player_ref)
-	scent.hcells = map.hcells
-	scent.vcells = map.vcells
+ScentTask=class(GenericVisitor,function(scent, game)
+	scent.hcells = game.map.hcells
+	scent.vcells = game.map.vcells
 	scent.current_map = {}
 	scent.next_map = {}
-	scent.ref_map = map
+	scent.ref_map = game.map
 	local i,j
 	for j=1,scent.hcells do
 		scent.current_map[j]={}
@@ -45,7 +52,7 @@ ScentTask=class(GenericVisitor,function(scent, map, player_ref)
 		end
 	end
 
-	scent.player = player_ref
+	scent.player = game.player
 end)
 
 function ScentTask:reset_loop()
@@ -136,10 +143,11 @@ end
 --------------------------------------------------
 
 Enemies = List()
-EnemyTask=class(GenericVisitor,function(self, scentVisitor, actuatorsmap)
+EnemyTask=class(GenericVisitor,function(self, game)
 	self.enemies = List()
-	self.scents = scentVisitor
-	self.actuatorsmap = actuatorsmap
+	self.scents = game.scentTask
+	self.actuatorsmap = game.actuatorList.actmap
+	self.actuatorList = game.actuatorList
 end)
 
 function EnemyTask:reset_loop()
@@ -233,7 +241,7 @@ function EnemyTask:launchEnemy()
 
 	self.enemies:pushBack(enemy)
 
-	actuatorList.actmap:enter(enemy)
+	self.actuatorList.actmap:enter(enemy)
 
 end
 
@@ -245,7 +253,7 @@ end)
 
 function Enemy:die()
 	self.task.scents:mark(self.pos,Blow_scent)
-	actuatorList.actmap:leave(self)
+	self.actuatorList.actmap:leave(self)
 	self.task.enemies:remove(self)
 end
 

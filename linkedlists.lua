@@ -330,7 +330,7 @@ end
 
 
 --~ -- Example of use (make the condition true to test)
-if true then
+if false then
 	list = List()
 	list:pushBack("abc")
 	list:pushBack("cde")
@@ -343,6 +343,7 @@ if true then
 	elem = list:getFirst()
 	while elem do
 		print(elem)
+--~ 		if elem=="cde" then list:removeCurrent() else print(elem) end
 		elem = list:getNext()
 	end
 

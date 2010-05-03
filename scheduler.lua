@@ -129,6 +129,44 @@ function Scheduler:addUrgentTask(visitor)
 	self.urgentTasks:pushBack(UrgentTask(visitor))
 end
 
+function Scheduler:cancel(visitor)
+	task = self.urgentTasks:getFirst()
+	while task do
+		if task.visitor == visitor then
+			self.urgentTasks:removeCurrent()
+			return
+		end
+		task = self.urgentTasks:getNext()
+	end
+
+	task = self.timedTasks:getFirst()
+	while task do
+		if task.visitor == visitor then
+			self.timedTasks:removeCurrent()
+			return
+		end
+		task = self.timedTasks:getNext()
+	end
+
+	task = self.sleepingTasks:getFirst()
+	while task do
+		if task.visitor == visitor then
+			self.sleepingTasks:removeCurrent()
+			return
+		end
+		task = self.sleepingTasks:getNext()
+	end
+
+	task = self.untimedTasks:getFirst()
+	while task do
+		if task.visitor == visitor then
+			self.untimedTasks:removeCurrent()
+			return
+		end
+		task = self.untimedTasks:getNext()
+	end
+end
+
 function Scheduler:iteration(max_delay)
 	local startclock = love.timer.getTime()
 	local task
