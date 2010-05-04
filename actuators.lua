@@ -166,6 +166,38 @@ MachineGun = class(Actuator,function(act, pos, radius, actuatormap)
 end)
 
 --------------------------
+-- Actuator:  when someone enters
+-- tell the actuator that someone entered (candidate to see)
+-- "who" also remembers which actuators it has notified, so "leave" is only called when actually leaving the whole area
+-- the actuator remembers who is in its influence area
+-- also, if the actuator can see it, this "person" gets in a "seen" list
+-- when a door opens, notifies all the actuators that are in its influence area that "hey, I'm open"
+-- these actuators then check if there is someone in the influence area that was not seen and it's seen now
+-- when a door closes, notifies all the actuators "hey, I'm closed"
+-- these actuators then ckeck if there is someone in the seen area that is not seen any more and moves them if necessary
+
+-- so, instead of calling leave+move+enter on each turn, we will call "move(oldpos, newpos)"
+-- move:
+--   we could use the trick of pushsorted! we need a unique identifier for each possible actuator
+--   which can be its order in the global actuators list
+--   then, when we move we have to track: which new actuators we have entered and  which new actuators we have left
+--   enter:  append (sorted) the list of new actuators, remove duplicated entries
+--.... this is overengineering, simply:
+--   leaving: for each old actuator (that is, the actuator list in the former position, we don't actually need
+--   to store that in the who info), if it is not in the new list, call "leave"
+--   and for each new actuator, if it was not in the old list call "enter"
+--   a "who" that enters is automatically pushed into the "range" list
+--   a "who" that leaves is automatically erased from both lists
+--   then, the who that enters, has to be checked against the "seen" list:
+--   if it is seen now, push it there and call "activate"
+--   if it is not seen, wait
+--   when opening doors:  if the seen and unseen lists are equal, nothing to do
+--               if not, check if we now see any of the unseen whos
+--               if so, push him to the seen and "activate"
+--   when closing doors:  if there is someone seen, re-check him, if we don't see him any more, "leave"
+--  actually the "leave" action must be called on "total leave" only if the affected guy was seen
+
+--------------------------
 -- orientation:
 -- 1-up
 -- 2-down

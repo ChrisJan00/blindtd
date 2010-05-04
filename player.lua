@@ -189,7 +189,7 @@ function Player:processOrders(dt)
 	neworder = self.processingOrders:getFirst()
 	while neworder and neworder:hasFinished() do
 		if neworder:successful() then
-			self:applyOrder(neworder)
+			neworder:applyOrder()
 			self.processingOrders:removeCurrent()
 		else
 			self.processingOrders:discard()
@@ -202,8 +202,6 @@ end
 function Player:spawn( order )
 end
 
-function Player:applyOrder( order )
-end
 
 Order = class( function(o)
 end)
@@ -214,6 +212,9 @@ end
 
 function Order:successful()
 	return false
+end
+
+function Order:applyOrder( order )
 end
 
 
