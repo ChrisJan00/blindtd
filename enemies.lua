@@ -198,20 +198,21 @@ function EnemyTask:updateEnemy()
 
 	local lastscent = scentmap[enemy.pos[1]][enemy.pos[2]]
 	self.actuatorsmap:leave( enemy )
+	local celldata = self.actuatorsmap.refmap[enemy.pos[1]][enemy.pos[2]]
 
-	if randchoice == 1 then
+	if randchoice == 1 and (celldata.u == 1 or celldata.u==2) then
 		enemy.pos = { enemy.pos[1], enemy.pos[2]-1 }
 	end
 
-	if randchoice == 2 then
+	if randchoice == 2 and (celldata.d == 1 or celldata.d==2) then
 		enemy.pos = { enemy.pos[1], enemy.pos[2]+1 }
 	end
 
-	if randchoice == 3 then
+	if randchoice == 3 and (celldata.l == 1 or celldata.l==2) then
 		enemy.pos = { enemy.pos[1]-1, enemy.pos[2] }
 	end
 
-	if randchoice == 4 then
+	if randchoice == 4 and (celldata.r == 1 or celldata.r==2) then
 		enemy.pos = { enemy.pos[1]+1, enemy.pos[2] }
 	end
 	local newscent = scentmap[enemy.pos[1]][enemy.pos[2]]

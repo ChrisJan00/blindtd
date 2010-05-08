@@ -98,7 +98,7 @@ function TimedTask:checkActive()
 	if self.timer <= 0 then
 		if self.ready and not self.finished then
 			-- skip iteration
-			print("Time Out!")
+--~ 			print("Time Out!")
 		else
 			self.active = true
 			self.ready = false
@@ -201,7 +201,7 @@ function Scheduler:iteration(max_delay)
 			task = self.sleepingTasks:getNext()
 		end
 
-		-- see how many tasks are alife
+		-- see how many tasks are alive
 		local taskcount = self.timedTasks.n + self.untimedTasks.n
 		if taskcount == 0 then
 			break

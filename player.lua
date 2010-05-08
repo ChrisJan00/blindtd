@@ -43,7 +43,7 @@ function Player:setStartPos()
 	for j=1,self.refmap.vcells do
 		for i=1,self.refmap.hcells do
 			if self.refmap[i][self.refmap.vcells-j+1].corridor then
-				self.pos = {i,j}
+				self.pos = {i,self.refmap.vcells-j+1}
 				return
 			end
 		end
