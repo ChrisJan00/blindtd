@@ -53,6 +53,7 @@ ScentTask=class(GenericVisitor,function(scent, game)
 	end
 
 	scent.player = game.player
+	scent.playerMarked = false
 end)
 
 function ScentTask:reset_loop()
@@ -68,11 +69,6 @@ function ScentTask:mark(pos, scent)
 end
 
 function ScentTask:iteration(dt)
-	if not self.player_marked then
-		-- always mark the current position
-		self:mark(self.player.pos, Player_scent)
-		self.player_marked = true
-	else
 		if self.ref_map[self.i][self.j].corridor then
 			local sum = self.current_map[self.i][self.j] * Center_weight
 			local count = Center_weight
@@ -101,7 +97,6 @@ function ScentTask:iteration(dt)
 			self.j = self.j+1
 			if self.j>self.vcells then return true end
 		end
-	end
 
 	return false
 end
@@ -111,6 +106,7 @@ function ScentTask:finish_loop()
 	local tmp = self.current_map
 	self.current_map = self.next_map
 	self.next_map = tmp
+	self.playerMarked = false
 	for j=1,self.hcells do
 		for i=1,self.vcells do
 			self.next_map[j][i]=0

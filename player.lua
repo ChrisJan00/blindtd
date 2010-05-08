@@ -26,6 +26,8 @@ Orders = {
 	dropOrder = 5
 }
 
+-- new todo:  since the doors delay you, take that into accound in the routefinder thread! (adding a cost for crossing them)
+
 Player = class ( function (p, game)
 	p.gameref = game
 	p.refmap = game.map
@@ -44,6 +46,7 @@ function Player:setStartPos()
 		for i=1,self.refmap.hcells do
 			if self.refmap[i][self.refmap.vcells-j+1].corridor then
 				self.pos = {i,self.refmap.vcells-j+1}
+				self.newpos = { self.pos[1], self.pos[2] }
 				return
 			end
 		end
@@ -65,6 +68,11 @@ function Player:appendPath( pathcont )
 		end
 		pathcont.path = {}
 	end
+end
+
+function Player:moveTo( newpos )
+	self.gameref.scheduler:addUntimedTask(RouteFinder({self.newpos[1],self.newpos[2]},{newpos[1],newpos[2]},self.gameref.map,self.gameref.pathcont, nil, true))
+	self.newpos = {newpos[1],newpos[2]}
 end
 
 -- moving:
@@ -116,8 +124,25 @@ end
 --~ 	self:move(dt)
 --~ end
 
+function canpass(from,to,map)
+	if to[2]<from[2] then
+		if map[from[1]][from[2]].u==3 or map[from[1]][from[2]].u==4 then return false else return true end
+	end
+	if to[2]>from[2] then
+		if map[from[1]][from[2]].d==3 or map[from[1]][from[2]].d==4 then return false else return true end
+	end
+	if to[1]<from[1] then
+		if map[from[1]][from[2]].l==3 or map[from[1]][from[2]].l==4 then return false else return true end
+	end
+	if to[1]>from[1] then
+		if map[from[1]][from[2]].r==3 or map[from[1]][from[2]].r==4 then return false else return true end
+	end
+	return true
+end
+
 function Player:move(dt)
 	--if not self.pathcont.path then return end
+	-- todo: this assumes that all steps take the same time but... the doors delay you!
 		local do_step = false
 		local nsteps = 1
 		local currentpos = self.pos
@@ -133,9 +158,16 @@ function Player:move(dt)
 		if self.path and do_step then
 			if table.getn(self.path)>0 then
 				if nsteps>table.getn(self.path) then nsteps=table.getn(self.path) end
-				currentpos = self.path[nsteps]
+--~ 				local nextcurrentpos = self.path[nsteps]
+--~ 					currentpos = self.pos
 				local i
 				for i=1,nsteps do
+					local nextcurrentpos = {self.path[1][1],self.path[1][2]}
+					if not canpass(currentpos,nextcurrentpos,self.gameref.map) then
+						break
+					else
+						currentpos = {nextcurrentpos[1],nextcurrentpos[2]}
+					end
 					--scentTask:markPlayer(self.path[1])
 					self.scent:mark(self.path[1],Player_scent)
 					table.remove(self.path,1)
@@ -143,10 +175,15 @@ function Player:move(dt)
 			end
 		end
 
-		if self.pos ~= currentpos then
+		if self.pos[1] ~= currentpos[1] or self.pos[2]~=currentpos[2] then
 			self.act.actmap:leave(self)
-			self.pos = currentpos
+			self.pos = {currentpos[1],currentpos[2]}
 			self.act.actmap:enter(self)
+		else
+			if not self.scent.playerMarked then
+				self.scent:mark(self.pos,Player_scent)
+				self.scent.playerMarked = true
+			end
 		end
 end
 

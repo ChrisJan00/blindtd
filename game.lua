@@ -35,6 +35,9 @@ touched = 0
 
 self = {}
 
+-- todo:  since the order in which parts of the game are instantiated is a bit random, avoid references in sub-items until necessary
+-- (that is, if a class has self.sthref = game.sthref, avoid doing that in the constructor and retrieve the reference in the method that needs it)
+-- also:  avoid underscores in method names
 
 function Game:load()
 --~ 	love.filesystem.load("map.lua")()
@@ -51,14 +54,6 @@ function Game:load()
 
 	self.scheduler:addUntimedTask(MapCacher(self.map,self.cachedmap))
 
-	self.player = Player(self)
-	currentpos = {self.player.pos[1],self.player.pos[2]}
-
---~ 	initScent(self.map)
-	self.scentTask = ScentTask(self)
-	self.scheduler:addTimedTask(self.scentTask,0.08)
-
-
 	----------- actuators
 	self.actuatorList = ActuatorList(self.map)
 	while self.actuatorList.list.n < 0 do
@@ -68,6 +63,17 @@ function Game:load()
 
 	-- doors
 	self:addDoors()
+
+		--~ 	initScent(self.map)
+	self.scentTask = ScentTask(self)
+	self.scheduler:addTimedTask(self.scentTask,0.08)
+
+	self.player = Player(self)
+	currentpos = {self.player.pos[1],self.player.pos[2]}
+
+
+
+
 
 	--~  	launchEnemy(self.scentTask)
 	self.enemyTask = EnemyTask(self)
@@ -84,10 +90,10 @@ function Game:addDoors()
 	for i=1,self.map.hcells-1 do
 		for j=1,self.map.vcells-1 do
 			if self.map[i][j].r == 2 or self.map[i][j].r == 3 then
-				self.actuatorList:addDoor({i,j}, 4, 0)
+				self.actuatorList:addDoor({i,j}, 4, 3-self.map[i][j].r)
 			end
 			if self.map[i][j].d == 2 or self.map[i][j].d == 3 then
-				self.actuatorList:addDoor({i,j}, 2, 0)
+				self.actuatorList:addDoor({i,j}, 2, 3-self.map[i][j].l)
 			end
 		end
 	end
@@ -251,11 +257,14 @@ function Game:mousepressed(x, y, button)
 	end
 
 
+--~ 	if self.map[cx][cy].corridor and button == "l" then
+--~ 		if not currentpos then currentpos = {cx,cy} end
+--~ 		local dest = currentpos
+--~ 		if table.getn(self.path)>0 then dest = self.path[table.getn(self.path)] end
+--~ 		self.scheduler:addUntimedTask(RouteFinder(dest, {cx,cy}, self.map, self.pathcont, nil, true))
+--~ 	end
 	if self.map[cx][cy].corridor and button == "l" then
-		if not currentpos then currentpos = {cx,cy} end
-		local dest = currentpos
-		if table.getn(self.path)>0 then dest = self.path[table.getn(self.path)] end
-		self.scheduler:addUntimedTask(RouteFinder(dest, {cx,cy}, self.map, self.pathcont, nil, true))
+		self.player:moveTo({cx,cy})
 	end
 end
 

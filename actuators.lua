@@ -211,7 +211,7 @@ Door = class(Actuator,function(door, pos, orientation, open_percent, actuatormap
 	door.pos = {pos[1],pos[2]}
 	door.detected = List()
 	-- it takes 0.5 seconds to open
-	door.open_velocity = 1/0.5
+	door.open_velocity = 1/0.8
 	door.open_percent = open_percent
 	door:fill()
 end)
@@ -306,15 +306,15 @@ function Door:update(dt)
 		self.open_percent = self.open_percent + dt * self.open_velocity
 	elseif self.detected.n == 0 and self.open_percent > 0 then
 		self.open_percent = self.open_percent - dt * self.open_velocity
+		self:setInMap( 3 )
 	end
 
-	if self.open_percent >=1 then
+	if self.open_percent > 1 then
 		self:setInMap( 2 )
 		self.open_percent = 1
 	end
 
-	if self.open_percent <=0 then
-		self:setInMap( 3 )
+	if self.open_percent <0 then
 		self.open_percent = 0
 	end
 end
