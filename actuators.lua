@@ -18,17 +18,17 @@
 
 -- actuators
 
-ActuatorMap = class( function(acts, refmap)
-	acts.refmap = refmap
-	acts.map = {}
-	acts:init()
+ActuatorMap = class( function(self, game)
+	self.game = game
+	self.map = {}
+	self:init()
 end)
 
 function ActuatorMap:init()
 	local i,j
-	for i=1,self.refmap.hcells do
+	for i=1,self.game.map.hcells do
 		self.map[i]={}
-		for j=1,self.refmap.vcells do
+		for j=1,self.game.map.vcells do
 			self.map[i][j]=List()
 		end
 	end
@@ -104,13 +104,13 @@ end
   --  x
   -- "x" will be active if at least one of the doors is open.
 
-Actuator = class(function(act, pos, radius, actuatormap)
-	act.actmap = actuatormap
-	act.radius = radius
-	act.pos = {pos[1],pos[2]}
-	act:fill()
-	act.seen = List()
-	act.sensed = List()
+Actuator = class(function(self, game, pos, radius)
+	self.game = game
+	self.radius = radius
+	self.pos = {pos[1],pos[2]}
+	self:fill()
+	self.seen = List()
+	self.sensed = List()
 end
 )
 
@@ -120,25 +120,25 @@ function Actuator:fill()
 	local elem = self.cellslist:getFirst()
 	while elem do
 		local newradius = self.cellslist.current.val+1
-		if self.actmap.refmap[elem[1]][elem[2]].u>0 and newradius<= self.radius
+		if self.game.map[elem[1]][elem[2]].u>0 and newradius<= self.radius
 			and not self.cellslist:containsContents({elem[1],elem[2]-1}) then
 			self.cellslist:pushBack({elem[1],elem[2]-1},newradius)
 		end
-		if self.actmap.refmap[elem[1]][elem[2]].d>0 and newradius<= self.radius
+		if self.game.map[elem[1]][elem[2]].d>0 and newradius<= self.radius
 			and not self.cellslist:containsContents({elem[1],elem[2]+1}) then
 			self.cellslist:pushBack({elem[1],elem[2]+1},newradius)
 		end
-		if self.actmap.refmap[elem[1]][elem[2]].l>0 and newradius<= self.radius
+		if self.game.map[elem[1]][elem[2]].l>0 and newradius<= self.radius
 			and not self.cellslist:containsContents({elem[1]-1,elem[2]}) then
 			self.cellslist:pushBack({elem[1]-1,elem[2]},newradius)
 		end
-		if self.actmap.refmap[elem[1]][elem[2]].r>0 and newradius<= self.radius
+		if self.game.map[elem[1]][elem[2]].r>0 and newradius<= self.radius
 			and not self.cellslist:containsContents({elem[1]+1,elem[2]}) then
 			self.cellslist:pushBack({elem[1]+1,elem[2]},newradius)
 		end
 		elem = self.cellslist:getNext()
 	end
-	self.actmap:add(self)
+	self.game.actuatorList.actuatorMap:add(self)
 end
 
 function Actuator:activate( who )
@@ -152,7 +152,7 @@ function Actuator:activate( who )
 end
 
 function Actuator:canSee( who )
-	if findRoute( self.pos, who.pos, self.actmap.refmap, self.radius) then
+	if findRoute( self.pos, who.pos, self.game.map, self.radius) then
 		return true
 	else
 		return false
@@ -195,10 +195,10 @@ end
 function Actuator:leave( who )
 end
 --------------------------
-ActuatorList = class( function (self, refmap)
+ActuatorList = class( function (self, game)
 	self.list = List()
-	self.actmap = ActuatorMap(refmap)
-	self.refmap = refmap
+	self.game = game
+	self.actuatorMap = ActuatorMap(game)
 end)
 
 function ActuatorList:draw()
@@ -218,16 +218,16 @@ function ActuatorList:update(dt)
 end
 
 function ActuatorList:addBomb(pos)
-	self.list:pushBack( DeathPoint( pos, self.actmap ) )
+	self.list:pushBack( DeathPoint( self.game, pos ) )
 end
 
 function ActuatorList:addDoor(pos, orientation, open_percent)
-	self.list:pushBack( Door( pos, orientation, open_percent, self.actmap) )
+	self.list:pushBack( Door( self.game, pos, orientation, open_percent) )
 end
 
 
 --------------------------
-MachineGun = class(Actuator,function(act, pos, radius, actuatormap)
+MachineGun = class(Actuator,function(act, game, pos, radius)
 end)
 
 --------------------------
@@ -236,19 +236,19 @@ end)
 -- 2-down
 -- 3-left
 -- 4-right
-Door = class(Actuator,function(door, pos, orientation, open_percent, actuatormap)
-	door.radius = 2
-	door._base.init(door, pos, door.radius, actuatormap)
+Door = class(Actuator,function(self, game, pos, orientation, open_percent)
+--~ 	self.game = game
+	self.radius = 2
+	self._base.init(self, game, pos, self.radius)
 	--act._base.init(act, pos, 3, actuatormap)
-	door.actmap = actuatormap
-	door.orientation = orientation
+	self.orientation = orientation
 
-	door.pos = {pos[1],pos[2]}
+	self.pos = {pos[1],pos[2]}
 	-- it takes 0.5 seconds to open
-	door.open_velocity = 1/0.8
-	door.open_percent = open_percent
-	door.status = 0
-	door:fill()
+	self.open_velocity = 1/0.8
+	self.open_percent = open_percent
+	self.status = 0
+	self:fill()
 end)
 
 -- the door needs a special fill method because it lies between two cells
@@ -257,19 +257,19 @@ function Door:fill()
 	self.cellslist:pushFront( {self.pos[1],self.pos[2]},0 )
 
 	-- add the other side
-	if self.orientation == 1 and self.actmap.refmap[self.pos[1]][self.pos[2]].u>0 then
+	if self.orientation == 1 and self.game.map[self.pos[1]][self.pos[2]].u>0 then
 		self.backpos = {self.pos[1], self.pos[2]-1}
 		self.cellslist:pushBack( {self.pos[1], self.pos[2]-1}, 0)
 	end
-	if self.orientation == 2 and self.actmap.refmap[self.pos[1]][self.pos[2]].d>0 then
+	if self.orientation == 2 and self.game.map[self.pos[1]][self.pos[2]].d>0 then
 		self.backpos = {self.pos[1], self.pos[2]+1}
 		self.cellslist:pushBack( {self.pos[1], self.pos[2]+1}, 0)
 	end
-	if self.orientation == 3 and self.actmap.refmap[self.pos[1]][self.pos[2]].l>0 then
+	if self.orientation == 3 and self.game.map[self.pos[1]][self.pos[2]].l>0 then
 		self.backpos = {self.pos[1]-1, self.pos[2]}
 		self.cellslist:pushBack( {self.pos[1]-1, self.pos[2]}, 0)
 	end
-	if self.orientation == 4 and self.actmap.refmap[self.pos[1]][self.pos[2]].r>0 then
+	if self.orientation == 4 and self.game.map[self.pos[1]][self.pos[2]].r>0 then
 		self.backpos = {self.pos[1]+1, self.pos[2]}
 		self.cellslist:pushBack( {self.pos[1]+1, self.pos[2]}, 0)
 	end
@@ -277,29 +277,29 @@ function Door:fill()
 	local elem = self.cellslist:getFirst()
 	while elem do
 		local newradius = self.cellslist.current.val+1
-		if self.actmap.refmap[elem[1]][elem[2]].u>0 and newradius<= self.radius
+		if self.game.map[elem[1]][elem[2]].u>0 and newradius<= self.radius
 			and not self.cellslist:containsContents({elem[1],elem[2]-1}) then
 			self.cellslist:pushBack({elem[1],elem[2]-1},newradius)
 		end
-		if self.actmap.refmap[elem[1]][elem[2]].d>0 and newradius<= self.radius
+		if self.game.map[elem[1]][elem[2]].d>0 and newradius<= self.radius
 			and not self.cellslist:containsContents({elem[1],elem[2]+1}) then
 			self.cellslist:pushBack({elem[1],elem[2]+1},newradius)
 		end
-		if self.actmap.refmap[elem[1]][elem[2]].l>0 and newradius<= self.radius
+		if self.game.map[elem[1]][elem[2]].l>0 and newradius<= self.radius
 			and not self.cellslist:containsContents({elem[1]-1,elem[2]}) then
 			self.cellslist:pushBack({elem[1]-1,elem[2]},newradius)
 		end
-		if self.actmap.refmap[elem[1]][elem[2]].r>0 and newradius<= self.radius
+		if self.game.map[elem[1]][elem[2]].r>0 and newradius<= self.radius
 			and not self.cellslist:containsContents({elem[1]+1,elem[2]}) then
 			self.cellslist:pushBack({elem[1]+1,elem[2]},newradius)
 		end
 		elem = self.cellslist:getNext()
 	end
-	self.actmap:add(self)
+	self.game.actuatorList.actuatorMap:add(self)
 end
 
 function Door:canSee( who )
-	if findRoute( self.pos, who.pos, self.actmap.refmap, self.radius) or findRoute(self.backpos, who.pos, self.actmap.refmap, self.radius) then
+	if findRoute( self.pos, who.pos, self.game.map, self.radius) or findRoute(self.backpos, who.pos, self.game.map, self.radius) then
 		return true
 	else
 		return false
@@ -307,7 +307,7 @@ function Door:canSee( who )
 end
 
 function Door:draw()
-	local dx,dy = self.actmap.refmap.side,self.actmap.refmap.side
+	local dx,dy = self.game.map.side,self.game.map.side
 	local i,j = self.pos[1],self.pos[2]
 	local sp = 0.5 - self.open_percent*0.5
 	if self.orientation == 1 then
@@ -358,20 +358,20 @@ function Door:setInMap( newcode )
 	if self.status == newCode then return end
 
 	if self.orientation == 1 then
-		self.actmap.refmap[self.pos[1]][self.pos[2]].u = newcode
-		self.actmap.refmap[self.pos[1]][self.pos[2]-1].d = newcode
+		self.game.map[self.pos[1]][self.pos[2]].u = newcode
+		self.game.map[self.pos[1]][self.pos[2]-1].d = newcode
 	end
 	if self.orientation == 2 then
-		self.actmap.refmap[self.pos[1]][self.pos[2]].d = newcode
-		self.actmap.refmap[self.pos[1]][self.pos[2]+1].u = newcode
+		self.game.map[self.pos[1]][self.pos[2]].d = newcode
+		self.game.map[self.pos[1]][self.pos[2]+1].u = newcode
 	end
 	if self.orientation == 3 then
-		self.actmap.refmap[self.pos[1]][self.pos[2]].l = newcode
-		self.actmap.refmap[self.pos[1]-1][self.pos[2]].r = newcode
+		self.game.map[self.pos[1]][self.pos[2]].l = newcode
+		self.game.map[self.pos[1]-1][self.pos[2]].r = newcode
 	end
 	if self.orientation == 4 then
-		self.actmap.refmap[self.pos[1]][self.pos[2]].r = newcode
-		self.actmap.refmap[self.pos[1]+1][self.pos[2]].l = newcode
+		self.game.map[self.pos[1]][self.pos[2]].r = newcode
+		self.game.map[self.pos[1]+1][self.pos[2]].l = newcode
 	end
 
 	self.status = newcode
@@ -381,7 +381,7 @@ end
 
 function Door:notifySeenChanged()
 
-	local mappos = self.actmap.map[self.pos[1]][self.pos[2]]
+	local mappos = self.game.actuatorList.actuatorMap.map[self.pos[1]][self.pos[2]]
 	local current = mappos.current
 	local affected = mappos:getFirst()
 	while affected do
@@ -389,7 +389,7 @@ function Door:notifySeenChanged()
 		affected = mappos:getNext()
 	end
 	mappos.current = current
-	mappos = self.actmap.map[self.backpos[1]][self.backpos[2]]
+	mappos = self.game.actuatorList.actuatorMap.map[self.backpos[1]][self.backpos[2]]
 	current = mappos.current
 	affected = mappos:getFirst()
 	while affected do
@@ -401,19 +401,19 @@ end
 
 
 --------------------------
-DeathPoint = class(Actuator, function(act, pos, actuatormap)
+DeathPoint = class(Actuator, function(act, game, pos)
 	-- todo: there is some bug at the filling algorithm that makes the thing hang
-	act._base.init(act, pos, 3, actuatormap)
+	act._base.init(act, game, pos, 3)
 	end)
 
 function DeathPoint:enter( who )
-	if findRoute( self.pos, who.pos, self.actmap.refmap, self.radius) then
+	if findRoute( self.pos, who.pos, self.game.map, self.radius) then
 		who:die()
 	end
 end
 
 function DeathPoint:draw()
-	local dx,dy =  self.actmap.refmap.side, self.actmap.refmap.side
+	local dx,dy =  self.game.map.side, self.game.map.side
 	local i,j = self.pos[1],self.pos[2]
 
 	love.graphics.setColor(0,255,255)

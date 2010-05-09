@@ -28,16 +28,16 @@ Orders = {
 
 -- new todo:  since the doors delay you, take that into accound in the routefinder thread! (adding a cost for crossing them)
 
-Player = class ( function (p, game)
-	p.gameref = game
-	p.refmap = game.map
-	p.act = game.actuatorList
-	p.scent = game.scentTask
-	p.path = {}
-	p.step_counter = 0
-	p:setStartPos()
-	p.waitingOrders = List()
-	p.processingOrders = List()
+Player = class ( function (self, game)
+	self.game = game
+	self.refmap = game.map
+	self.act = game.actuatorList
+	self.scent = game.scentTask
+	self.path = {}
+	self.step_counter = 0
+	self:setStartPos()
+	self.waitingOrders = List()
+	self.processingOrders = List()
 end)
 
 function Player:setStartPos()
@@ -71,7 +71,7 @@ function Player:appendPath( pathcont )
 end
 
 function Player:moveTo( newpos )
-	self.gameref.scheduler:addUntimedTask(RouteFinder({self.newpos[1],self.newpos[2]},{newpos[1],newpos[2]},self.gameref.map,self.gameref.pathcont, nil, true))
+	self.game.scheduler:addUntimedTask(RouteFinder({self.newpos[1],self.newpos[2]},{newpos[1],newpos[2]},self.game.map,self.game.pathcont, nil, true))
 	self.newpos = {newpos[1],newpos[2]}
 end
 
@@ -117,7 +117,7 @@ end
 --~ function Player:appendDestination( dest )
 --~ 	local order = {Orders.moveOrder,{dest[1],dest[2]},{}}
 --~ 	self.orders:pushBack(order)
---~ 	self.gameref.scheduler:addUntimedTask(RouteFinder({dest[1],dest[2]}, {self.pos[1],self.pos[2]}, game.map, order[3], nil, true))
+--~ 	self.game.scheduler:addUntimedTask(RouteFinder({dest[1],dest[2]}, {self.pos[1],self.pos[2]}, game.map, order[3], nil, true))
 --~ end
 
 --~ function Player:update(dt)
@@ -163,7 +163,7 @@ function Player:move(dt)
 				local i
 				for i=1,nsteps do
 					local nextcurrentpos = {self.path[1][1],self.path[1][2]}
-					if not canpass(currentpos,nextcurrentpos,self.gameref.map) then
+					if not canpass(currentpos,nextcurrentpos,self.game.map) then
 						break
 					else
 						currentpos = {nextcurrentpos[1],nextcurrentpos[2]}
@@ -176,11 +176,11 @@ function Player:move(dt)
 		end
 
 		if self.pos[1] ~= currentpos[1] or self.pos[2]~=currentpos[2] then
---~ 			self.act.actmap:leave(self)
+--~ 			self.game.actuatorList.actuatorMap:leave(self)
 			local oldpos = {self.pos[1],self.pos[2]}
 			self.pos = {currentpos[1],currentpos[2]}
-			self.act.actmap:move( self, oldpos, currentpos )
---~ 			self.act.actmap:enter(self)
+			self.game.actuatorList.actuatorMap:move( self, oldpos, currentpos )
+--~ 			self.game.actuatorList.actuatorMap:enter(self)
 		else
 			if not self.scent.playerMarked then
 				self.scent:mark(self.pos,Player_scent)

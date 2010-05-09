@@ -212,11 +212,11 @@ function EnemyTask:updateEnemy()
 	if randchoice == 4 and (celldata.r == 1 or celldata.r==2) then
 		enemy.pos = { enemy.pos[1]+1, enemy.pos[2] }
 	end
-	self.game.actuatorList.actmap:move( enemy, lastpos, enemy.pos )
+	self.game.actuatorList.actuatorMap:move( enemy, lastpos, enemy.pos )
 	-- todo: the player pos has to be retrieved from somewhere else
 	if enemy.pos[1]==self.scents.player.pos[1] and enemy.pos[2]==self.scents.player.pos[2] then
 		touched = touched + 1
-		self.game.actuatorList.actmap:leave( enemy )
+		self.game.actuatorList.actuatorMap:leave( enemy )
 		self.enemies:remove(enemy)
 
 	end
@@ -237,7 +237,7 @@ function EnemyTask:launchEnemy()
 
 	self.enemies:pushBack(enemy)
 
-	self.game.actuatorList.actmap:enter(enemy)
+	self.game.actuatorList.actuatorMap:enter(enemy)
 end
 
 Enemy = class( function( e, pos, task )

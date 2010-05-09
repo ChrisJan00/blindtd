@@ -56,7 +56,7 @@ function Game:load()
 	self.scheduler:addUntimedTask(MapCacher(self.map,self.cachedmap))
 
 	----------- actuators
-	self.actuatorList = ActuatorList(self.map)
+	self.actuatorList = ActuatorList(self)
 	while self.actuatorList.list.n < 0 do
 		local pos = {math.random(20),math.random(20)}
 		if self.map[pos[1]][pos[2]].corridor then self.actuatorList:addBomb(pos) end
@@ -81,7 +81,7 @@ function Game:load()
 	self.scheduler:addTimedTask(self.enemyTask,0.18)
 
 
-	self.actuatorList.actmap:enter(self.player)
+	self.actuatorList.actuatorMap:enter(self.player)
 
 
 end
