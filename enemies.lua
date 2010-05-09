@@ -30,9 +30,8 @@ Prob_move = 0.98
 -- (for example, how strong is the scent)
 -- that is done with an internal timer
 
--- also todo: enemies are stopped in front of closed doors.. if the door is blocked, they "hit" it
--- to check: if they bounce or not... they should bounce after a while, not stay there eternally, but also
--- not bounce automatically... maybe the scent can do that
+-- also todo: if the door is blocked, they "hit" it
+
 
 
 --------------------------------------------------
@@ -213,12 +212,10 @@ function EnemyTask:updateEnemy()
 		enemy.pos = { enemy.pos[1]+1, enemy.pos[2] }
 	end
 	self.game.actuatorList.actuatorMap:move( enemy, lastpos, enemy.pos )
-	-- todo: the player pos has to be retrieved from somewhere else
-	if enemy.pos[1]==self.scents.player.pos[1] and enemy.pos[2]==self.scents.player.pos[2] then
+	if enemy.pos[1]==self.game.player.pos[1] and enemy.pos[2]==self.game.player.pos[2] then
 		touched = touched + 1
 		self.game.actuatorList.actuatorMap:leave( enemy )
 		self.enemies:remove(enemy)
-
 	end
 
 end
