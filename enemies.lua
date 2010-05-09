@@ -142,8 +142,9 @@ Enemies = List()
 EnemyTask=class(GenericVisitor,function(self, game)
 	self.enemies = List()
 	self.scents = game.scentTask
-	self.actuatorsmap = game.actuatorList.actmap
-	self.actuatorList = game.actuatorList
+--~ 	self.actuatorsmap = game.actuatorList.actmap
+--~ 	self.actuatorList = game.actuatorList
+	self.game = game
 end)
 
 function EnemyTask:reset_loop()
@@ -193,8 +194,8 @@ function EnemyTask:updateEnemy()
 	local randchoice = elem
 
 	local lastscent = scentmap[enemy.pos[1]][enemy.pos[2]]
-	self.actuatorsmap:leave( enemy )
-	local celldata = self.actuatorsmap.refmap[enemy.pos[1]][enemy.pos[2]]
+	local lastpos = { enemy.pos[1], enemy.pos[2] }
+	local celldata = self.game.map[enemy.pos[1]][enemy.pos[2]]
 
 	if randchoice == 1 and (celldata.u == 1 or celldata.u==2) then
 		enemy.pos = { enemy.pos[1], enemy.pos[2]-1 }
@@ -211,13 +212,11 @@ function EnemyTask:updateEnemy()
 	if randchoice == 4 and (celldata.r == 1 or celldata.r==2) then
 		enemy.pos = { enemy.pos[1]+1, enemy.pos[2] }
 	end
-	local newscent = scentmap[enemy.pos[1]][enemy.pos[2]]
-	self.actuatorsmap:enter( enemy )
-
- 	--enemy.Scents.next_map[enemy.pos[1]][enemy.pos[2]] = enemy.Scents.next_map[enemy.pos[1]][enemy.pos[2]] + Enemy_scent
+	self.game.actuatorList.actmap:move( enemy, lastpos, enemy.pos )
+	-- todo: the player pos has to be retrieved from somewhere else
 	if enemy.pos[1]==self.scents.player.pos[1] and enemy.pos[2]==self.scents.player.pos[2] then
 		touched = touched + 1
-		self.actuatorsmap:leave( enemy )
+		self.game.actuatorList.actmap:leave( enemy )
 		self.enemies:remove(enemy)
 
 	end
@@ -238,8 +237,7 @@ function EnemyTask:launchEnemy()
 
 	self.enemies:pushBack(enemy)
 
-	self.actuatorList.actmap:enter(enemy)
-
+	self.game.actuatorList.actmap:enter(enemy)
 end
 
 Enemy = class( function( e, pos, task )

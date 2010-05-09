@@ -18,11 +18,6 @@
 
 -- actuators
 
--- todo:  each actuator has a list of targeted entities (that could be seen)
--- each actuator also has a list of entities actually seen, depending on open doors
--- when a door changes status, it notifies all the actuators that see it the new status
--- the actuators re-check their list of targeted entities, if any changes its status from unseen to seen or viceversa, it acts accordingly
-
 ActuatorMap = class( function(acts, refmap)
 	acts.refmap = refmap
 	acts.map = {}
@@ -42,7 +37,9 @@ end
 function ActuatorMap:add(actuator)
 	local cell = actuator.cellslist:getFirst()
 	while cell do
-		self.map[cell[1]][cell[2]]:pushBack(actuator)
+		if not self.map[cell[1]][cell[2]]:contains(actuator) then
+			self.map[cell[1]][cell[2]]:pushBack(actuator)
+		end
 		cell = actuator.cellslist:getNext()
 	end
 end
@@ -52,6 +49,28 @@ function ActuatorMap:remove(actuator)
 	while cell do
 		self.map[cell[1]][cell[2]]:remove(actuator)
 		cell = actuator.cellslist:getNext()
+	end
+end
+
+function ActuatorMap:move(who, from, to)
+	local cellfrom = self.map[from[1]][from[2]]
+	local cellto = self.map[to[1]][to[2]]
+	-- check leaves
+	local ref = cellfrom:getFirst()
+	while ref do
+		if not cellto:contains( ref ) then
+			ref:deactivate( who )
+		end
+		ref = cellfrom:getNext()
+	end
+
+	-- check enters
+	ref = cellto:getFirst()
+	while ref do
+		if not cellfrom:contains( ref ) then
+			ref:activate( who )
+		end
+		ref = cellto:getNext()
 	end
 end
 
@@ -66,7 +85,7 @@ end
 function ActuatorMap:leave( who )
 	local ref = self.map[who.pos[1]][who.pos[2]]:getFirst()
 	while ref do
-		ref:leave( who )
+		ref:deactivate( who )
 		ref = self.map[who.pos[1]][who.pos[2]]:getNext()
 	end
 end
@@ -84,13 +103,14 @@ end
   --  d d
   --  x
   -- "x" will be active if at least one of the doors is open.
--- well, we can add the actuator in these cells no matter what, and then in the activate method check if there is a valid way actually, using A*
 
 Actuator = class(function(act, pos, radius, actuatormap)
 	act.actmap = actuatormap
 	act.radius = radius
 	act.pos = {pos[1],pos[2]}
 	act:fill()
+	act.seen = List()
+	act.sensed = List()
 end
 )
 
@@ -122,14 +142,58 @@ function Actuator:fill()
 end
 
 function Actuator:activate( who )
+	if not self.sensed:contains( who )	then
+		self.sensed:pushBack( who )
+		if self:canSee( who ) then
+			self.seen:pushBack( who )
+			self:enter( who )
+		end
+	end
 end
 
-function Actuator:leave( who )
+function Actuator:canSee( who )
+	if findRoute( self.pos, who.pos, self.actmap.refmap, self.radius) then
+		return true
+	else
+		return false
+	end
+end
+
+function Actuator:deactivate( who )
+	if self.sensed:contains( who ) then
+		self.sensed:remove( who )
+		if self.seen:contains( who ) then
+			self.seen:remove( who )
+			self:leave( who )
+		end
+	end
+end
+
+function Actuator:updateSeen()
+	local who = self.sensed:getFirst()
+	while who do
+		local wasSeen = self.seen:contains(who)
+		local isSeen = self:canSee(who)
+		if wasSeen and not isSeen then
+			self.seen:remove(who)
+			self:leave(who)
+		end
+		if isSeen and not wasSeen then
+			self.seen:pushBack(who)
+			self:enter(who)
+		end
+		who = self.sensed:getNext()
+	end
 end
 
 function Actuator:update( dt )
 end
 
+function Actuator:enter( who )
+end
+
+function Actuator:leave( who )
+end
 --------------------------
 ActuatorList = class( function (self, refmap)
 	self.list = List()
@@ -161,41 +225,10 @@ function ActuatorList:addDoor(pos, orientation, open_percent)
 	self.list:pushBack( Door( pos, orientation, open_percent, self.actmap) )
 end
 
+
 --------------------------
 MachineGun = class(Actuator,function(act, pos, radius, actuatormap)
 end)
-
---------------------------
--- Actuator:  when someone enters
--- tell the actuator that someone entered (candidate to see)
--- "who" also remembers which actuators it has notified, so "leave" is only called when actually leaving the whole area
--- the actuator remembers who is in its influence area
--- also, if the actuator can see it, this "person" gets in a "seen" list
--- when a door opens, notifies all the actuators that are in its influence area that "hey, I'm open"
--- these actuators then check if there is someone in the influence area that was not seen and it's seen now
--- when a door closes, notifies all the actuators "hey, I'm closed"
--- these actuators then ckeck if there is someone in the seen area that is not seen any more and moves them if necessary
-
--- so, instead of calling leave+move+enter on each turn, we will call "move(oldpos, newpos)"
--- move:
---   we could use the trick of pushsorted! we need a unique identifier for each possible actuator
---   which can be its order in the global actuators list
---   then, when we move we have to track: which new actuators we have entered and  which new actuators we have left
---   enter:  append (sorted) the list of new actuators, remove duplicated entries
---.... this is overengineering, simply:
---   leaving: for each old actuator (that is, the actuator list in the former position, we don't actually need
---   to store that in the who info), if it is not in the new list, call "leave"
---   and for each new actuator, if it was not in the old list call "enter"
---   a "who" that enters is automatically pushed into the "range" list
---   a "who" that leaves is automatically erased from both lists
---   then, the who that enters, has to be checked against the "seen" list:
---   if it is seen now, push it there and call "activate"
---   if it is not seen, wait
---   when opening doors:  if the seen and unseen lists are equal, nothing to do
---               if not, check if we now see any of the unseen whos
---               if so, push him to the seen and "activate"
---   when closing doors:  if there is someone seen, re-check him, if we don't see him any more, "leave"
---  actually the "leave" action must be called on "total leave" only if the affected guy was seen
 
 --------------------------
 -- orientation:
@@ -204,15 +237,17 @@ end)
 -- 3-left
 -- 4-right
 Door = class(Actuator,function(door, pos, orientation, open_percent, actuatormap)
+	door.radius = 2
+	door._base.init(door, pos, door.radius, actuatormap)
 	--act._base.init(act, pos, 3, actuatormap)
 	door.actmap = actuatormap
 	door.orientation = orientation
-	door.radius = 1
+
 	door.pos = {pos[1],pos[2]}
-	door.detected = List()
 	-- it takes 0.5 seconds to open
 	door.open_velocity = 1/0.8
 	door.open_percent = open_percent
+	door.status = 0
 	door:fill()
 end)
 
@@ -263,16 +298,12 @@ function Door:fill()
 	self.actmap:add(self)
 end
 
-function Door:activate( who )
-	if (not self.detected:contains(who)) and (findRoute( self.pos, who.pos, self.actmap.refmap, self.radius) or
-		findRoute(self.backpos, who.pos, self.actmap.refmap, self.radius))
-	then
-		self.detected:pushBack(who)
+function Door:canSee( who )
+	if findRoute( self.pos, who.pos, self.actmap.refmap, self.radius) or findRoute(self.backpos, who.pos, self.actmap.refmap, self.radius) then
+		return true
+	else
+		return false
 	end
-end
-
-function Door:leave(who)
-	self.detected:remove(who)
 end
 
 function Door:draw()
@@ -302,9 +333,9 @@ function Door:draw()
 end
 
 function Door:update(dt)
-	if self.detected.n > 0 and self.open_percent < 1 then
+	if self.seen.n > 0 and self.open_percent < 1 then
 		self.open_percent = self.open_percent + dt * self.open_velocity
-	elseif self.detected.n == 0 and self.open_percent > 0 then
+	elseif self.seen.n == 0 and self.open_percent > 0 then
 		self.open_percent = self.open_percent - dt * self.open_velocity
 		self:setInMap( 3 )
 	end
@@ -324,6 +355,8 @@ function Door:block()
 end
 
 function Door:setInMap( newcode )
+	if self.status == newCode then return end
+
 	if self.orientation == 1 then
 		self.actmap.refmap[self.pos[1]][self.pos[2]].u = newcode
 		self.actmap.refmap[self.pos[1]][self.pos[2]-1].d = newcode
@@ -340,7 +373,32 @@ function Door:setInMap( newcode )
 		self.actmap.refmap[self.pos[1]][self.pos[2]].r = newcode
 		self.actmap.refmap[self.pos[1]+1][self.pos[2]].l = newcode
 	end
+
+	self.status = newcode
+	-- notify all the actuators
+	self:notifySeenChanged()
 end
+
+function Door:notifySeenChanged()
+
+	local mappos = self.actmap.map[self.pos[1]][self.pos[2]]
+	local current = mappos.current
+	local affected = mappos:getFirst()
+	while affected do
+		affected:updateSeen()
+		affected = mappos:getNext()
+	end
+	mappos.current = current
+	mappos = self.actmap.map[self.backpos[1]][self.backpos[2]]
+	current = mappos.current
+	affected = mappos:getFirst()
+	while affected do
+		affected:updateSeen()
+		affected = mappos:getNext()
+	end
+	mappos.current = current
+end
+
 
 --------------------------
 DeathPoint = class(Actuator, function(act, pos, actuatormap)
@@ -348,7 +406,7 @@ DeathPoint = class(Actuator, function(act, pos, actuatormap)
 	act._base.init(act, pos, 3, actuatormap)
 	end)
 
-function DeathPoint:activate( who )
+function DeathPoint:enter( who )
 	if findRoute( self.pos, who.pos, self.actmap.refmap, self.radius) then
 		who:die()
 	end
@@ -364,11 +422,6 @@ end
 
 
 --------------------------
--- there is a map where each cell is a list of references to an actuator instance
--- when an entity steps in the cell, all referenced actuators are called
-
--- the actuator has a list of cells in which it is present, so when it has to be erased it nows who to call
--- it has a callback method that applies the effect of the actuator when it is called
 -- examples:  door -> open
 -- gun -> fire bullet
 -- mine -> explode

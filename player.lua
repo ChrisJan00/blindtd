@@ -176,9 +176,11 @@ function Player:move(dt)
 		end
 
 		if self.pos[1] ~= currentpos[1] or self.pos[2]~=currentpos[2] then
-			self.act.actmap:leave(self)
+--~ 			self.act.actmap:leave(self)
+			local oldpos = {self.pos[1],self.pos[2]}
 			self.pos = {currentpos[1],currentpos[2]}
-			self.act.actmap:enter(self)
+			self.act.actmap:move( self, oldpos, currentpos )
+--~ 			self.act.actmap:enter(self)
 		else
 			if not self.scent.playerMarked then
 				self.scent:mark(self.pos,Player_scent)

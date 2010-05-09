@@ -328,7 +328,6 @@ function List:findFirst( value )
 	return nil
 end
 
-
 --~ -- Example of use (make the condition true to test)
 if false then
 	list = List()

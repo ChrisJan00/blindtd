@@ -30,6 +30,7 @@ mytext=""
 fps = 0
 show_fps = false
 enemy_timer = 3
+enemy_spawndelay = 3
 enemy_launcher = true
 touched = 0
 
@@ -118,7 +119,7 @@ function Game:update(dt)
 
 		if enemy_timer > 0 then enemy_timer = enemy_timer - dt
 		if enemy_timer <=0 and enemy_launcher then self.enemyTask:launchEnemy()
-		enemy_timer = 2.5 end end
+		enemy_timer = enemy_spawndelay end end
 
 
 end
