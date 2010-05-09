@@ -1,25 +1,8 @@
-
-- is findroute appended correctly? (not overwritten)
 - player: tasklist
-- when applying findroute, you should be only capable of crossing when the door is open
-- also for the enemies
-
-- activators: when a door is open, the activators for what lies behind should expand...
 
 - block doors <- needs player class, player order list
 
-- check all the old code to find how it behaves with the new door code (like, being able to pass through closed doors
-because of lack of checking that condition)
-- probably it would be better to remap 0. wall, 1. blocked door, 2. closed door, 3. open door
-- two types of pathfinding: ignoring closed doors (because they will open) and considering them (for example with actuators) OK
-- cleanup game.lua, there are a lot of new helper functions that nead clearing
-- cleanup actuators (and check the other files) for sorting the functions
 
-- actuators:  they have a radius ( euclidian or manhattan )
-  - there is an actuator map that holds lists of references to the cells covered by the actuators
-    (for example, all cells in the radius of actuator A have a reference to A in their lists)
-  - when an entity moves, all the actuators of the cell that is abandoned are notified of the abandon
-  - when an entity moves, all the actuators of the new cell are notified of the entry
   - the actuator first processes all the abandons removing them from its own list of references to entities, then the enters
   - finally, the actuator performs an action depending on this list.  Examples:
     - doors: if there is at least one enity at sight, open
@@ -30,11 +13,8 @@ because of lack of checking that condition)
 	- sensor: report amount of victims detected
 
 
-- doors that open and close
 - orders: be able to give a list of orders to the character, he will follow them in sequence.  Also, cancel order,
 break list, prioritize...
-- enemies!  that move OK
-- scent! OK
 - weapons
 - radar
 - personal info
@@ -43,9 +23,7 @@ break list, prioritize...
 - several rooms
 
 =======
-- doors (automatic)
-- aliens OK
-- scent OK
+
 - instructions for the player (list of tasks)
 - block doors
 - turrets
