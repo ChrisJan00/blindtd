@@ -41,17 +41,10 @@ self = {}
 -- also:  avoid underscores in method names
 
 function Game:load()
---~ 	love.filesystem.load("map.lua")()
---~ 	love.filesystem.load("routefinder.lua")()
-
 	self.map = generateMapWRooms()
 	self.cachedmap = {}
 
-
-
 	self.scheduler = Scheduler()
-	self.pathcont={ path={} }
-	self.path={}
 
 	self.scheduler:addUntimedTask(MapCacher(self.map,self.cachedmap))
 
@@ -65,21 +58,14 @@ function Game:load()
 	-- doors
 	self:addDoors()
 
-		--~ 	initScent(self.map)
 	self.scentTask = ScentTask(self)
 	self.scheduler:addTimedTask(self.scentTask,0.08)
 
 	self.player = Player(self)
 	currentpos = {self.player.pos[1],self.player.pos[2]}
 
-
-
-
-
-	--~  	launchEnemy(self.scentTask)
 	self.enemyTask = EnemyTask(self)
 	self.scheduler:addTimedTask(self.enemyTask,0.18)
-
 
 	self.actuatorList.actuatorMap:enter(self.player)
 
@@ -100,9 +86,6 @@ function Game:addDoors()
 	end
 end
 
---~ Player = class(function(p)
---~ 	p.pos=currentpos
---~ end)
 
 function Game:update(dt)
 	fps = fps*0.99 + 0.01 * 1.0 / dt
@@ -112,9 +95,7 @@ function Game:update(dt)
 		self.scheduler:iteration(1.0/40.0)
 
 		self.actuatorList:update(dt)
---~ 		self:movePlayer(dt)
-		self.player:appendPath( self.pathcont )
-		self.player:move(dt)
+		self.player:update(dt)
 
 
 		if enemy_timer > 0 then enemy_timer = enemy_timer - dt
@@ -124,65 +105,20 @@ function Game:update(dt)
 
 end
 
-function Game:movePlayer(dt)
-	if table.getn(self.pathcont.path)>0 then
-			for i,v in ipairs(self.pathcont.path) do
-				table.insert(self.path,v)
-			end
-			self.pathcont.path = {}
-		end
-
-		local do_step = false
-		local nsteps = 1
-		if step_counter>0 then
-			step_counter = step_counter - dt
-		end
-		if step_counter<=0 then
-			do_step = true
-			nsteps = math.floor(math.abs(step_counter/step_size))+1
-			step_counter = step_size
-		end
-
-		if self.path and do_step then
-			if table.getn(self.path)>0 then
-				if nsteps>table.getn(self.path) then nsteps=table.getn(self.path) end
-				currentpos = self.path[nsteps]
-				local i
-				for i=1,nsteps do
-					--self.scentTask:markPlayer(self.path[1])
-					self.scentTask:mark(self.path[1],Player_scent)
-					table.remove(self.path,1)
-				end
-			end
-		end
-
-		if self.player.pos ~= currentpos then
-			self.actuatorList.actmap:leave(self.player)
-			self.player.pos = currentpos
-			self.actuatorList.actmap:enter(self.player)
-		end
-end
-
-
-
 function Game:draw()
---~ 	Map.draw(self.map)
+
 	if self.cachedmap.cached_map then
 		self.cachedmap.cached_map:blit()
 	end
 
 
-		self.scentTask:draw()
-		self.enemyTask:drawEnemies()
-		self.actuatorList:draw()
-		self:drawchar(self.player.pos)
-
-
+	self.scentTask:draw()
+	self.enemyTask:drawEnemies()
+	self.actuatorList:draw()
+	self:drawchar(self.player.pos)
 
 	self:drawtext()
 	self:drawscanlines()
-
---~ 	love.graphics.print(touched,482,40)
 
 	if show_fps then
 		love.graphics.print(fps, 482, 20)
@@ -257,13 +193,6 @@ function Game:mousepressed(x, y, button)
 		return
 	end
 
-
---~ 	if self.map[cx][cy].corridor and button == "l" then
---~ 		if not currentpos then currentpos = {cx,cy} end
---~ 		local dest = currentpos
---~ 		if table.getn(self.path)>0 then dest = self.path[table.getn(self.path)] end
---~ 		self.scheduler:addUntimedTask(RouteFinder(dest, {cx,cy}, self.map, self.pathcont, nil, true))
---~ 	end
 	if self.map[cx][cy].corridor and button == "l" then
 		self.player:moveTo({cx,cy})
 	end

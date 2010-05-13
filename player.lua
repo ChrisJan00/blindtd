@@ -18,13 +18,13 @@
 
 step_size = 0.08
 
-Orders = {
-	moveOrder = 1,
-	blockOrder = 2,
-	grabOrder = 3,
-	setOrder = 4,
-	dropOrder = 5
-}
+--~ Orders = {
+--~ 	moveOrder = 1,
+--~ 	blockOrder = 2,
+--~ 	grabOrder = 3,
+--~ 	setOrder = 4,
+--~ 	dropOrder = 5
+--~ }
 
 -- new todo:  since the doors delay you, take that into accound in the routefinder thread! (adding a cost for crossing them)
 
@@ -56,12 +56,16 @@ end
 function Player:die()
 end
 
+function Player:update(dt)
+	self:move(dt)
+	if not self.scent.playerMarked then
+		self.scent:mark(self.pos,Player_scent)
+		self.scent.playerMarked = true
+	end
+	self:processOrders(dt)
+end
+
 function Player:appendPath( pathcont )
---~ 	if not self.pathcont.path then
---~ 		self.pathcont.path = path
---~ 	else
---~ 		table.append(self.pathcont.path,path)
---~ 	end
 	if table.getn(pathcont.path)>0 then
 		for i,v in ipairs(pathcont.path) do
 			table.insert(self.path,v)
@@ -71,8 +75,7 @@ function Player:appendPath( pathcont )
 end
 
 function Player:moveTo( newpos )
-	self.game.scheduler:addUntimedTask(RouteFinder({self.newpos[1],self.newpos[2]},{newpos[1],newpos[2]},self.game.map,self.game.pathcont, nil, true))
-	self.newpos = {newpos[1],newpos[2]}
+	self.waitingOrders:pushBack( MoveOrder(self, newpos) )
 end
 
 -- moving:
@@ -114,15 +117,6 @@ end
 --   4- object O grabbed will be in X,Y
 --   5- activating an object will not change anything in the map
 
---~ function Player:appendDestination( dest )
---~ 	local order = {Orders.moveOrder,{dest[1],dest[2]},{}}
---~ 	self.orders:pushBack(order)
---~ 	self.game.scheduler:addUntimedTask(RouteFinder({dest[1],dest[2]}, {self.pos[1],self.pos[2]}, game.map, order[3], nil, true))
---~ end
-
---~ function Player:update(dt)
---~ 	self:move(dt)
---~ end
 
 function canpass(from,to,map)
 	if to[2]<from[2] then
@@ -140,54 +134,37 @@ function canpass(from,to,map)
 	return true
 end
 
+
 function Player:move(dt)
-	--if not self.pathcont.path then return end
-	-- todo: this assumes that all steps take the same time but... the doors delay you!
-		local do_step = false
-		local nsteps = 1
-		local currentpos = self.pos
-		if self.step_counter>0 then
-			self.step_counter = self.step_counter - dt
-		end
-		if self.step_counter<=0 then
-			do_step = true
-			nsteps = math.floor(math.abs(step_counter/step_size))+1
-			self.step_counter = step_size
-		end
-
-		if self.path and do_step then
-			if table.getn(self.path)>0 then
-				if nsteps>table.getn(self.path) then nsteps=table.getn(self.path) end
---~ 				local nextcurrentpos = self.path[nsteps]
---~ 					currentpos = self.pos
-				local i
-				for i=1,nsteps do
-					local nextcurrentpos = {self.path[1][1],self.path[1][2]}
-					if not canpass(currentpos,nextcurrentpos,self.game.map) then
-						break
-					else
-						currentpos = {nextcurrentpos[1],nextcurrentpos[2]}
-					end
-					--scentTask:markPlayer(self.path[1])
-					self.scent:mark(self.path[1],Player_scent)
-					table.remove(self.path,1)
-				end
+	if self.path and table.getn(self.path)>0 then
+		self.step_counter = self.step_counter + dt
+		while self.step_counter > 0 and table.getn(self.path)>0 do
+			self.step_counter = self.step_counter - step_size
+			local nextcurrentpos = {self.path[1][1],self.path[1][2]}
+			local currentpos = {self.pos[1],self.pos[2]}
+			self:singleStep(nextcurrentpos)
+			if canpass(currentpos,nextcurrentpos,self.game.map) then
+				table.remove(self.path,1)
 			end
 		end
-
-		if self.pos[1] ~= currentpos[1] or self.pos[2]~=currentpos[2] then
---~ 			self.game.actuatorList.actuatorMap:leave(self)
-			local oldpos = {self.pos[1],self.pos[2]}
-			self.pos = {currentpos[1],currentpos[2]}
-			self.game.actuatorList.actuatorMap:move( self, oldpos, currentpos )
---~ 			self.game.actuatorList.actuatorMap:enter(self)
-		else
-			if not self.scent.playerMarked then
-				self.scent:mark(self.pos,Player_scent)
-				self.scent.playerMarked = true
-			end
-		end
+	else
+		self.step_counter = 0
+	end
 end
+
+function Player:singleStep(newpos)
+	if not canpass(self.pos,newpos,self.game.map) then
+		newpos = {self.pos[1],self.pos[2]}
+	end
+	if self.pos[1] ~= newpos[1] or self.pos[2]~=newpos[2] then
+		local oldpos = {self.pos[1],self.pos[2]}
+		self.pos = {newpos[1],newpos[2]}
+		self.game.actuatorList.actuatorMap:move( self, oldpos, newpos )
+		self.scent:mark(newpos,Player_scent)
+		self.scent.playerMarked = true
+	end
+end
+
 
 -------------------------------------------------------------------------
 
@@ -219,7 +196,7 @@ function Player:processOrders(dt)
 	local neworder = self.waitingOrders:getFirst()
 	while neworder do
 		self.processingOrders:pushBack(neworder)
-		self:spawn(neworder)
+		neworder:start()
 		self.waitingOrders:removeCurrent()
 		neworder = self.waitingOrders:getNext()
 	end
@@ -238,49 +215,77 @@ function Player:processOrders(dt)
 end
 
 -- todos here:
-function Player:spawn( order )
-end
-
-
-Order = class( function(o)
+Order = class( GenericVisitor,function(self,player)
+	self.player = player
 end)
+
+function Order:start()
+	self.player.game.scheduler:addUntimedTask(self)
+end
 
 function Order:hasFinished()
-	return false
-end
-
-function Order:successful()
-	return false
-end
-
-function Order:applyOrder( order )
-end
-
-
-GameChangesType = {
-	playerMove = 1,
-	doorChange = 2,
-	objectGrab = 3,
-	objectLeave = 4,
-}
-
-GameChanges = class(function (c)
-	c.type = 0
-	c.pos = {0,0}
-	c.orientation = 0
-	c.result = 0 -- new door type
-	c.ref = 0 -- reference to object
-end)
-
-OrderTask = class(GenericVisitor,function(vis)
-end)
-
-function OrderTask:reset_loop()
-end
-
-function OrderTask:iteration(dt)
 	return true
 end
 
-function OrderTask:finish_loop()
+function Order:successful()
+	return true
+end
+
+function Order:applyOrder()
+end
+
+
+function Order:iteration(dt)
+	return true
+end
+
+--~ GameChangesType = {
+--~ 	playerMove = 1,
+--~ 	doorChange = 2,
+--~ 	objectGrab = 3,
+--~ 	objectLeave = 4,
+--~ }
+
+--~ GameChanges = class(function (c)
+--~ 	c.type = 0
+--~ 	c.pos = {0,0}
+--~ 	c.orientation = 0
+--~ 	c.result = 0 -- new door type
+--~ 	c.ref = 0 -- reference to object
+--~ end)
+
+
+
+
+MoveOrder = class(Order,function(self, player, newpos)
+	self._base.init(self,player)
+	self.dest = { newpos[1], newpos[2] }
+	if not self.player.newdest then
+		self.player.newdest = { self.player.pos[1], self.player.pos[2] }
+	end
+	self.origin = { self.player.newdest[1], self.player.newdest[2] }
+	self.player.newdest = { newpos[1], newpos[2] }
+	self.pathcont = {}
+end)
+
+function MoveOrder:reset_loop()
+	self.player.game.scheduler:addUntimedTask(RouteFinder(self.origin,self.dest,self.player.game.map,self.pathcont, nil, true))
+end
+
+
+function MoveOrder:iteration(dt)
+	if self.pathcont.path then return true else return false end
+end
+
+
+function MoveOrder:applyOrder()
+	self.player:appendPath(self.pathcont)
+end
+
+function MoveOrder:hasFinished()
+	if self.pathcont.path then return true else return false end
+end
+
+function MoveOrder:successful()
+	if table.getn(self.pathcont.path)>0 then return true else return false end
 end

@@ -253,6 +253,6 @@ function RouteFinder:finish_loop()
 	if table.getn(self.path) > 0 then
 		self.pathcontainer.path = self.path
 	else
-		self.pathcontainer.path = nil
+		self.pathcontainer.path = {}
 	end
 end
