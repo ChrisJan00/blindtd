@@ -39,13 +39,16 @@ function love.load()
 	love.filesystem.require("actuators.lua")
 	love.filesystem.require("player.lua")
 
+	love.filesystem.require("messagebox.lua")
+
 	-- Initialization
 	start_time = love.timer.getTime()
 
 	math.randomseed(os.time())
 
 	-- Init graphics mode
-       screensize = { 640, 480 }
+--~        screensize = { 640, 480 }
+	screensize = { 400,550 }
 	if not love.graphics.setMode( screensize[1], screensize[2], false, true, 0 ) then
 		quit()
 	end
