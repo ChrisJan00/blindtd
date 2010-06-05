@@ -21,17 +21,92 @@ if not love then
 	require 'linkedlists'
 end
 
-MessageBox = class( function(self, rect)
---~ 	self.text = ""
-	self.lines = {}
-	self.maxlinecount = 20
+UIList = class(function(self)
+	self.list=List()
+end)
+
+function UIList:addElement(element)
+	self.list:pushBack(element)
+	element.wasPressed = false
+end
+
+function UIList:removeElement(element)
+	self.list:remove(element)
+end
+
+function UIList:update(dt)
+	local elem = self.list:getFirst()
+	while elem do
+		elem:update(dt)
+		elem = self.list:getNext()
+	end
+end
+
+function UIList:draw()
+	local elem = self.list:getFirst()
+	while elem do
+		elem:draw()
+		elem = self.list:getNext()
+	end
+end
+
+function UIList:mousePressed(x,y,button)
+	local elem = self.list:getFirst()
+	while elem do
+		local rel_x = x - elem.rect[1]
+		local rel_y = y - elem.rect[2]
+		if rel_x >= 0 and rel_x <= elem.rect[3] and rel_y>=0 and rel_y<=elem.rect[4] then
+			elem.wasPressed = true
+			elem:mousePressed(rel_x,rel_y,button)
+		end
+		elem = self.list:getNext()
+	end
+end
+
+function UIList:mouseReleased(x,y,button)
+	local elem = self.list:getFirst()
+	while elem do
+		if elem.wasPressed then
+			elem.wasPressed = false
+			local rel_x = x - elem.rect[1]
+			local rel_y = y - elem.rect[2]
+			elem:mouseReleased(rel_x,rel_y,button)
+		end
+		elem = self.list:getNext()
+	end
+end
+
+------------------------------------------------------------
+UIElement = class( function(self, rect)
 	self.rect = rect or {10,10,300,50}
+end)
+
+function UIElement:update(dt)
+end
+
+function UIElement:draw()
+end
+
+function UIElement:mousePressed(rel_x, rel_y, button)
+end
+
+function UIElement:mouseReleased(rel_x, rel_y, button)
+end
+
+------------------------------------------------------------
+MessageBox = class( UIElement, function(self, rect)
+	self._base.init(self, rect)
+	self.lines = {}
 	self.fontheight = love.graphics.getFont():getHeight()
+	if self.fontheight<5 then self.fontheight=5 end
+	self.borderWidth = 4
+	local barArea = self.rect[4]-2*self.borderWidth
+	self.maxlinecount = barArea*barArea/self.fontheight/20
+	if self.maxlinecount<10 then self.maxlinecount=10 end
 	self.fontshade = {}
 	-- after 1 second, brightness is 0.8 of the maximum
 	self.shadingSpeed = -math.log(0.8)
 	self.scroll = 0
-	self.borderWidth = 4
 	self.barWidth = 10
 	self.scrollAreaLength=1
 	self.dragging = false
@@ -134,7 +209,8 @@ function MessageBox:draw()
 	-- text
 	love.graphics.setScissor( self.rect[1]+self.borderWidth, self.rect[2]+self.borderWidth, self.rect[3]-self.borderWidth*3-self.barWidth, self.rect[4]-self.borderWidth )
 	for i,line in ipairs(self.lines) do
-		love.graphics.setColor(50*self.fontshade[i],180*self.fontshade[i],200)
+		love.graphics.setColor(100*self.fontshade[i],255*self.fontshade[i],200+55*self.fontshade[i])
+		love.graphics.setColorMode("modulate")
 		love.graphics.print(line,self.rect[1]+self.borderWidth,self.rect[2]+self.borderWidth+self.fontheight*i-self.scroll)
 	end
 	love.graphics.setScissor()
@@ -175,4 +251,59 @@ function MessageBox:mouseReleased(rel_x,rel_y,button)
 	self.dragging = false
 end
 
+------------------------------------------------------------
+UIButton = class( UIElement, function(self, rect, text)
+	self._base.init(self, rect)
+	self.radius = 0
+	self.segments = 8
+	self.color = {0,100,200}
+	self.textColor = {0,0,0}
+	self.text = text or ""
+end)
 
+function UIButton:setRadius(newRadius)
+	self.radius = newRadius
+	local maxRadius = math.min(self.rect[3],self.rect[4])/2
+	if self.radius > maxRadius then self.radius = maxRadius end
+	if self.radius > 0 then
+		local minAngle = math.asin(2/self.radius)
+		if minAngle<math.pi/20 then minAngle = math.pi/20 end
+		self.segments = 360/minAngle
+		if self.segments<8 then self.segments=8 end
+	end
+end
+
+function UIButton:update(dt)
+end
+
+function UIButton:draw()
+	if self.radius > 0 then
+		love.graphics.setColor(self.color[1],self.color[2],self.color[3])
+		love.graphics.circle("fill", self.rect[1]+self.radius, self.rect[2]+self.radius, self.radius)
+		love.graphics.circle("fill", self.rect[1]+self.rect[3]-self.radius, self.rect[2]+self.radius, self.radius)
+		love.graphics.circle("fill", self.rect[1]+self.radius, self.rect[2]+self.rect[4]-self.radius, self.radius)
+		love.graphics.circle("fill", self.rect[1]+self.rect[3]-self.radius, self.rect[2]+self.rect[4]-self.radius, self.radius)
+		love.graphics.rectangle("fill", self.rect[1], self.rect[2]+self.radius, self.rect[3], self.rect[4]-self.radius*2)
+		love.graphics.rectangle("fill", self.rect[1]+self.radius, self.rect[2], self.rect[3]-2*self.radius, self.rect[4])
+	else
+		love.graphics.setColor(self.color[1],self.color[2],self.color[3])
+		love.graphics.rectangle("fill",self.rect[1],self.rect[2],self.rect[3],self.rect[4])
+	end
+
+	if string.len(self.text)>0 then
+		love.graphics.setColorMode("modulate")
+		love.graphics.setColor(self.textColor[1],self.textColor[2],self.textColor[3])
+		local textWidth = love.graphics.getFont():getWidth(self.text)
+		local textHeight = love.graphics.getFont():getHeight()
+		love.graphics.print(self.text, self.rect[1]+self.rect[3]/2-textWidth/2, self.rect[2]+self.rect[4]/2+textHeight/2-3)
+	end
+end
+
+function UIButton:mousePressed(rel_x, rel_y, button)
+end
+
+function UIElement:mouseReleased(rel_x, rel_y, button)
+end
+---------------------------
+
+--~ print(math.sin(math.pi/4))

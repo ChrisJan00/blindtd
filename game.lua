@@ -34,7 +34,7 @@ enemy_spawndelay = 3
 enemy_launcher = true
 touched = 0
 
-self = {}
+--~ self = {}
 
 -- todo:  since the order in which parts of the game are instantiated is a bit random, avoid references in sub-items until necessary
 -- (that is, if a class has self.sthref = game.sthref, avoid doing that in the constructor and retrieve the reference in the method that needs it)
@@ -69,8 +69,15 @@ function Game:load()
 
 	self.actuatorList.actuatorMap:enter(self.player)
 
-
+	self.UI = UIList()
 	self.messagebox = MessageBox({ 10,410,380,100 })
+	self.UI:addElement(self.messagebox)
+
+--~ 	self.button = UIButton( { 100,100,100,33 } )
+--~ 	self.button:setRadius(6)
+--~ 	self.button.text = "Accept"
+--~ 	self.UI:addElement(self.button)
+
 end
 
 function Game:addDoors()
@@ -100,16 +107,21 @@ function Game:update(dt)
 
 
 		if enemy_timer > 0 then enemy_timer = enemy_timer - dt
-		if enemy_timer <=0 and enemy_launcher then self.enemyTask:launchEnemy()
-		enemy_timer = enemy_spawndelay end end
+			if enemy_timer <=0 and enemy_launcher then
+				self.enemyTask:launchEnemy()
+				enemy_timer = enemy_spawndelay
+				myprint("New enemy launched")
+			end
+		end
 
-		self.messagebox:update(dt)
+		self.UI:update(dt)
 
 end
 
 function Game:draw()
 
 	if self.cachedmap.cached_map then
+		love.graphics.setColor(255,160,0)
 		self.cachedmap.cached_map:blit()
 	end
 
@@ -119,7 +131,7 @@ function Game:draw()
 	self.actuatorList:draw()
 	self:drawchar(self.player.pos)
 
-	self.messagebox:draw()
+	self.UI:draw()
 
 	self:drawtext()
 	self:drawscanlines()
@@ -164,11 +176,16 @@ end
 
 function myprint(t)
 	mytext=mytext..t.."\n"
+--~ 	self.messagebox:addText(t)
 end
 
 function Game:drawtext()
-	love.graphics.setColor(200,200,200)
-	love.graphics.print(mytext, 480, 20)
+	if string.len(mytext)>0 then
+		self.messagebox:addText(mytext)
+		mytext=""
+	end
+--~ 	love.graphics.setColor(200,200,200)
+--~ 	love.graphics.print(mytext, 480, 20)
 end
 
 
@@ -186,14 +203,15 @@ end
 
 function Game:mousepressed(x, y, button)
 
-	local rel_x = x - self.messagebox.rect[1]
-	local rel_y = y - self.messagebox.rect[2]
-	if rel_x>=0 and rel_x<=self.messagebox.rect[3] and rel_y>=0 and rel_y<=self.messagebox.rect[4] then
---~ 		self.messagebox:addText("yes "..rel_x.." "..rel_y)
-		self.messagebox:mousePressed(rel_x, rel_y, button)
-	else
---~ 		self.messagebox:addText("no "..rel_x.." "..rel_y)
-	end
+	self.UI:mousePressed(x,y,button)
+--~ 	local rel_x = x - self.messagebox.rect[1]
+--~ 	local rel_y = y - self.messagebox.rect[2]
+--~ 	if rel_x>=0 and rel_x<=self.messagebox.rect[3] and rel_y>=0 and rel_y<=self.messagebox.rect[4] then
+
+--~ 		self.messagebox:mousePressed(rel_x, rel_y, button)
+--~ 	else
+
+--~ 	end
 
 	local dx,dy = self.map.side,self.map.side
 	local cx = math.floor(x/dx)+1
@@ -216,10 +234,11 @@ end
 
 
 function Game:mousereleased(x, y, button)
-	local rel_x = x - self.messagebox.rect[1]
-	local rel_y = y - self.messagebox.rect[2]
-	if self.messagebox.dragging then
-		self.messagebox:mouseReleased(rel_x, rel_y, button)
-	end
+	self.UI:mouseReleased(x,y,button)
+--~ 	local rel_x = x - self.messagebox.rect[1]
+--~ 	local rel_y = y - self.messagebox.rect[2]
+--~ 	if self.messagebox.dragging then
+--~ 		self.messagebox:mouseReleased(rel_x, rel_y, button)
+--~ 	end
 end
 

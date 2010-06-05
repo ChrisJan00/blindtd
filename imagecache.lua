@@ -47,6 +47,7 @@ function ImageCache:blit(x,y)
 	end
 	local px = x or 0
 	local py = y or 0
+	love.graphics.setColorMode("replace")
 	love.graphics.draw(self.image,px,py)
 end
 
