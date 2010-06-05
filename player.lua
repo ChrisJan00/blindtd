@@ -17,6 +17,7 @@
 --     along with Blind Tower Defense  If not, see <http://www.gnu.org/licenses/>.
 
 step_size = 0.08
+doorblock_delay = 1.2
 
 --~ Orders = {
 --~ 	moveOrder = 1,
@@ -288,4 +289,35 @@ end
 
 function MoveOrder:successful()
 	if table.getn(self.pathcont.path)>0 then return true else return false end
+end
+
+-----------------------------------------------------
+
+BlockOrder = class(Order,function(self,player,door)
+	self._base.init(self,player)
+	self.door = door
+	self.timer = doorblock_delay
+end)
+
+function BlockOrder:iteration(dt)
+	-- fist wait until it's my turn
+	if not self == self.player.processingOrders:getFirst() then return false end
+	-- assuming I'm first (so player position is the desired position)
+	self.timer = self.timer - dt
+	if self.timer <= 0 then
+		return true
+	end
+	return false
+end
+
+function BlockOrder:hasFinished()
+	return (self.timer <= 0)
+end
+
+function BlockOrder:successful()
+	return true
+end
+
+function BlockOrder:applyOrder()
+	-- todo: mark the map accordingly
 end
