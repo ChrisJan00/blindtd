@@ -70,6 +70,7 @@ function Game:load()
 	self.actuatorList.actuatorMap:enter(self.player)
 
 
+	self.messagebox = MessageBox({ 10,410,380,100 })
 end
 
 function Game:addDoors()
@@ -102,6 +103,7 @@ function Game:update(dt)
 		if enemy_timer <=0 and enemy_launcher then self.enemyTask:launchEnemy()
 		enemy_timer = enemy_spawndelay end end
 
+		self.messagebox:update(dt)
 
 end
 
@@ -116,6 +118,8 @@ function Game:draw()
 	self.enemyTask:drawEnemies()
 	self.actuatorList:draw()
 	self:drawchar(self.player.pos)
+
+	self.messagebox:draw()
 
 	self:drawtext()
 	self:drawscanlines()
@@ -182,6 +186,15 @@ end
 
 function Game:mousepressed(x, y, button)
 
+	local rel_x = x - self.messagebox.rect[1]
+	local rel_y = y - self.messagebox.rect[2]
+	if rel_x>=0 and rel_x<=self.messagebox.rect[3] and rel_y>=0 and rel_y<=self.messagebox.rect[4] then
+--~ 		self.messagebox:addText("yes "..rel_x.." "..rel_y)
+		self.messagebox:mousePressed(rel_x, rel_y, button)
+	else
+--~ 		self.messagebox:addText("no "..rel_x.." "..rel_y)
+	end
+
 	local dx,dy = self.map.side,self.map.side
 	local cx = math.floor(x/dx)+1
 	local cy = math.floor(y/dy)+1
@@ -196,10 +209,17 @@ function Game:mousepressed(x, y, button)
 	if self.map[cx][cy].corridor and button == "l" then
 		self.player:moveTo({cx,cy})
 	end
+
+
 end
 
 
 
 function Game:mousereleased(x, y, button)
+	local rel_x = x - self.messagebox.rect[1]
+	local rel_y = y - self.messagebox.rect[2]
+	if self.messagebox.dragging then
+		self.messagebox:mouseReleased(rel_x, rel_y, button)
+	end
 end
 

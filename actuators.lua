@@ -226,9 +226,7 @@ function ActuatorList:addDoor(pos, orientation, open_percent)
 end
 
 
---------------------------
-MachineGun = class(Actuator,function(act, game, pos, radius)
-end)
+
 
 --------------------------
 -- orientation:
@@ -420,6 +418,9 @@ function DeathPoint:draw()
 	love.graphics.rectangle("fill" , (i-1)*dx+1,(j-1)*dy+1,dx-1,dy-1 )
 end
 
+--------------------------
+MachineGun = class(Actuator,function(act, game, pos, radius)
+end)
 
 --------------------------
 -- examples:  door -> open
