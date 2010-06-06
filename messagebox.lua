@@ -48,7 +48,7 @@ end
 function UIList:draw()
 	local elem = self.list:getFirst()
 	while elem do
-		elem:draw()
+		if elem.isVisible then elem:draw() end
 		elem = self.list:getNext()
 	end
 end
@@ -56,11 +56,13 @@ end
 function UIList:mousePressed(x,y,button)
 	local elem = self.list:getFirst()
 	while elem do
-		local rel_x = x - elem.rect[1]
-		local rel_y = y - elem.rect[2]
-		if rel_x >= 0 and rel_x <= elem.rect[3] and rel_y>=0 and rel_y<=elem.rect[4] then
-			elem.wasPressed = true
-			elem:mousePressed(rel_x,rel_y,button)
+		if elem.isVisible then
+			local rel_x = x - elem.rect[1]
+			local rel_y = y - elem.rect[2]
+			if rel_x >= 0 and rel_x <= elem.rect[3] and rel_y>=0 and rel_y<=elem.rect[4] then
+				elem.wasPressed = true
+				elem:mousePressed(rel_x,rel_y,button)
+			end
 		end
 		elem = self.list:getNext()
 	end
@@ -85,7 +87,7 @@ function UIList:checkMouseOver()
 	while elem do
 		local rel_x = x - elem.rect[1]
 		local rel_y = y - elem.rect[2]
-		local isIn = (rel_x >= 0 and rel_x <= elem.rect[3] and rel_y>=0 and rel_y<=elem.rect[4])
+		local isIn = elem.isVisible and (rel_x >= 0 and rel_x <= elem.rect[3] and rel_y>=0 and rel_y<=elem.rect[4])
 		local wasIn = (self.oldX >= elem.rect[1] and self.oldX <= elem.rect[1]+elem.rect[3] and
 			self.oldY >= elem.rect[2] and self.oldY<=elem.rect[2]+elem.rect[4])
 		if isIn and (not wasIn) then elem:mouseEntered(rel_x,rel_y) end
@@ -100,6 +102,7 @@ end
 ------------------------------------------------------------
 UIElement = class( function(self, rect)
 	self.rect = rect or {10,10,300,50}
+	self.isVisible = true
 end)
 
 function UIElement:update(dt)
