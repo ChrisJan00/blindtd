@@ -58,12 +58,11 @@ function Player:die()
 end
 
 function Player:update(dt)
-	self:move(dt)
+	self:processOrders(dt)
 	if not self.scent.playerMarked then
 		self.scent:mark(self.pos,Player_scent)
 		self.scent.playerMarked = true
 	end
-	self:processOrders(dt)
 end
 
 function Player:appendPath( pathcont )
@@ -136,22 +135,22 @@ function canpass(from,to,map)
 end
 
 
-function Player:move(dt)
-	if self.path and table.getn(self.path)>0 then
-		self.step_counter = self.step_counter + dt
-		while self.step_counter > 0 and table.getn(self.path)>0 do
-			self.step_counter = self.step_counter - step_size
-			local nextcurrentpos = {self.path[1][1],self.path[1][2]}
-			local currentpos = {self.pos[1],self.pos[2]}
-			self:singleStep(nextcurrentpos)
-			if canpass(currentpos,nextcurrentpos,self.game.map) then
-				table.remove(self.path,1)
-			end
-		end
-	else
-		self.step_counter = 0
-	end
-end
+--~ function Player:move(dt)
+--~ 	if self.path and table.getn(self.path)>0 then
+--~ 		self.step_counter = self.step_counter + dt
+--~ 		while self.step_counter > 0 and table.getn(self.path)>0 do
+--~ 			self.step_counter = self.step_counter - step_size
+--~ 			local nextcurrentpos = {self.path[1][1],self.path[1][2]}
+--~ 			local currentpos = {self.pos[1],self.pos[2]}
+--~ 			self:singleStep(nextcurrentpos)
+--~ 			if canpass(currentpos,nextcurrentpos,self.game.map) then
+--~ 				table.remove(self.path,1)
+--~ 			end
+--~ 		end
+--~ 	else
+--~ 		self.step_counter = 0
+--~ 	end
+--~ end
 
 function Player:singleStep(newpos)
 	if not canpass(self.pos,newpos,self.game.map) then
@@ -255,21 +254,43 @@ end
 --~ 	c.ref = 0 -- reference to object
 --~ end)
 
--- TODO: problema amb el apply-move
--- el "move" te dos parts
--- la  primera part pot correr en parallel, es on es calcula la ruta
---    que per cert ha d'incloure els futurs canvis
--- la segona part ha de correr en serie, es el propi moviment
--- si considerem que el move ha acabat quan acaba la primera part
--- ens trobem que desapareix de la llista quan esta aplicant la segona
--- no el podem cancelar a la meitat
--- les altres accions han d'esperar que el moment sigui correcte (posicio correcte)
--- si considerem que el move ha acabat quan la segona
---   hem de forsar que la segona succeeixi en serie
---   pero sense prendre precedencia
---   podriem incloure un nou tipus de tasca al scheduler, "serialized", on cada subtasca comensa nomes
---   quan l'anterior ha acabat, pero que no pren el 100% de protagonisme
 
+---------------------------------------------------------------------------
+MoveTask = class(GenericVisitor,function(self, player, path, arrivedContainer)
+	self.player = player
+	self.path = path
+	self.arrivedContainer = arrivedContainer
+end)
+
+function MoveTask:reset_loop()
+	self.step_counter = 0
+end
+
+function MoveTask:iteration(dt)
+	if self.path and table.getn(self.path)>0 then
+		self.step_counter = self.step_counter + dt
+		while self.step_counter > 0 and table.getn(self.path)>0 do
+			self.step_counter = self.step_counter - step_size
+			local nextcurrentpos = {self.path[1][1],self.path[1][2]}
+			local currentpos = {self.player.pos[1],self.player.pos[2]}
+			self.player:singleStep(nextcurrentpos)
+			if canpass(currentpos,nextcurrentpos,self.player.game.map) then
+				table.remove(self.path,1)
+			end
+		end
+	else
+		self.step_counter = 0
+	end
+	if table.getn(self.path)==0 then return true end
+	return false
+end
+
+
+function MoveTask:finish_loop()
+	self.arrivedContainer.arrived = true
+end
+
+---------------------------------------------------------------------------
 
 MoveOrder = class(Order,function(self, player, newpos)
 	self._base.init(self,player)
@@ -280,28 +301,40 @@ MoveOrder = class(Order,function(self, player, newpos)
 	self.origin = { self.player.newdest[1], self.player.newdest[2] }
 	self.player.newdest = { newpos[1], newpos[2] }
 	self.pathcont = {}
+	self.arrived = false
+	self.success = false
 end)
 
 function MoveOrder:reset_loop()
 	self.player.game.scheduler:addUntimedTask(RouteFinder(self.origin,self.dest,self.player.game.map,self.pathcont, nil, true))
 end
 
-
 function MoveOrder:iteration(dt)
-	if self.pathcont.path then return true else return false end
+	if self.pathcont.path then
+		if table.getn(self.pathcont.path)>0 then
+			self.success = true
+			self.player.game.scheduler:addSerialTask(MoveTask(self.player,self.pathcont.path,self))
+			self.pathcont.path = nil
+			else
+			self.success = false
+			self.arrived = true
+			return true
+		end
+	end
+
+	return self.arrived
 end
 
 
 function MoveOrder:applyOrder()
-	self.player:appendPath(self.pathcont)
 end
 
 function MoveOrder:hasFinished()
-	if self.pathcont.path then return true else return false end
+	return self.arrived
 end
 
 function MoveOrder:successful()
-	if table.getn(self.pathcont.path)>0 then return true else return false end
+	return self.success
 end
 
 -----------------------------------------------------
@@ -328,6 +361,7 @@ function BlockOrder:hasFinished()
 end
 
 function BlockOrder:successful()
+	-- always successful
 	return true
 end
 

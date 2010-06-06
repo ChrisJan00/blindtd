@@ -39,6 +39,7 @@ Task = class( function(task, visitorInstance)
 	task.timer = 0
 	task.dt = 0
 	task.stopwatch = love.timer.getTime()
+	task.activity_stopwatch = task.stopwatch
 end)
 
 function Task:iteration(max_delay)
@@ -58,6 +59,9 @@ function Task:iteration(max_delay)
 		self.finished = self.visitor:iteration(self.dt)
 
 		local stopwatch = love.timer.getTime()
+		self.dt = stopwatch - self.stopwatch
+		self.stopwatch = stopwatch
+
 		self.estimated_delay = self.time_alpha * self.estimated_delay + (1-self.time_alpha)*(stopwatch-startwatch)
 		elapsed = stopwatch-starttime
 		startwatch = stopwatch
@@ -74,10 +78,7 @@ function Task:iteration(max_delay)
 end
 
 function Task:checkActive()
-	local stopwatch = love.timer.getTime()
-	self.dt = stopwatch - self.stopwatch
-	self.stopwatch = stopwatch
-
+	self.activity_stopwatch = love.timer.getTime()
 	return self.active
 end
 
@@ -92,10 +93,8 @@ end)
 
 function TimedTask:checkActive()
 	local stopwatch = love.timer.getTime()
-	self.dt = stopwatch - self.stopwatch
-	self.stopwatch = stopwatch
-
-	self.timer = self.timer - self.dt
+	self.timer = self.timer - (stopwatch - self.activity_stopwatch)
+	self.activity_stopwatch = stopwatch
 	if self.timer <= 0 then
 		if self.ready and not self.finished then
 			-- skip iteration
