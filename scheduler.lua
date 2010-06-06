@@ -83,6 +83,7 @@ end
 
 UrgentTask = class(Task)
 UntimedTask = class(Task)
+SerialTask = class(Task)
 TimedTask = class(Task, function(timedtask,visitorInstance,iterationPeriod)
 	timedtask._base.init(timedtask,visitorInstance)
 	timedtask.period = iterationPeriod or 10000
@@ -115,6 +116,7 @@ Scheduler = class( function(scheduler)
 	scheduler.timedTasks = List()
 	scheduler.untimedTasks = List()
 	scheduler.sleepingTasks = List()
+	scheduler.serialTasks = List()
 end )
 
 function Scheduler:addTimedTask(visitor, period)
@@ -127,6 +129,10 @@ end
 
 function Scheduler:addUrgentTask(visitor)
 	self.urgentTasks:pushBack(UrgentTask(visitor))
+end
+
+function Scheduler:addSerialTask(visitor)
+	self.serialTasks:pushBack(SerialTask(visitor))
 end
 
 function Scheduler:cancel(visitor)
@@ -165,6 +171,15 @@ function Scheduler:cancel(visitor)
 		end
 		task = self.untimedTasks:getNext()
 	end
+
+	task = self.serialTasks:getFirst()
+	while task do
+		if task.visitor == visitor then
+			self.serialTasks:removeCurrent()
+			return
+		end
+		task = self.serialTasks:getNext()
+	end
 end
 
 function Scheduler:iteration(max_delay)
@@ -202,9 +217,25 @@ function Scheduler:iteration(max_delay)
 		end
 
 		-- see how many tasks are alive
-		local taskcount = self.timedTasks.n + self.untimedTasks.n
+		local taskcount = self.timedTasks.n + self.untimedTasks.n + self.serialTasks.n
 		if taskcount == 0 then
 			break
+		end
+
+		-- Serial tasks
+		if self.serialTasks.n > 0 then
+			task = self.serialTasks:getFirst()
+			if task then
+				local available_time = max_delay - (love.timer.getTime() - startclock)
+				local time_slot = available_time / taskcount
+
+				if task:checkActive() then
+					task:iteration(time_slot)
+				else
+					self.serialTasks:removeCurrent()
+				end
+				taskcount = taskcount - 1
+			end
 		end
 
 		-- Timed tasks

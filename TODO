@@ -1,3 +1,8 @@
+-- change resolution again, go back to former
+-- map size defined as UI element, not as "ocupy maximum available"
+
+-- player move as serialized task!
+
 - player: tasklist
 
 - block doors <- needs player class, player order list

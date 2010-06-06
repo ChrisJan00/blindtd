@@ -255,7 +255,20 @@ end
 --~ 	c.ref = 0 -- reference to object
 --~ end)
 
-
+-- TODO: problema amb el apply-move
+-- el "move" te dos parts
+-- la  primera part pot correr en parallel, es on es calcula la ruta
+--    que per cert ha d'incloure els futurs canvis
+-- la segona part ha de correr en serie, es el propi moviment
+-- si considerem que el move ha acabat quan acaba la primera part
+-- ens trobem que desapareix de la llista quan esta aplicant la segona
+-- no el podem cancelar a la meitat
+-- les altres accions han d'esperar que el moment sigui correcte (posicio correcte)
+-- si considerem que el move ha acabat quan la segona
+--   hem de forsar que la segona succeeixi en serie
+--   pero sense prendre precedencia
+--   podriem incloure un nou tipus de tasca al scheduler, "serialized", on cada subtasca comensa nomes
+--   quan l'anterior ha acabat, pero que no pren el 100% de protagonisme
 
 
 MoveOrder = class(Order,function(self, player, newpos)

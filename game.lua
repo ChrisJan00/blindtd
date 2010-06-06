@@ -70,8 +70,8 @@ function Game:load()
 	self.actuatorList.actuatorMap:enter(self.player)
 
 	self.UI = UIList()
-	self.messagebox = MessageBox({ 10,410,380,100 })
-	self.UI:addElement(self.messagebox)
+--~ 	self.messagebox = MessageBox({ 10,410,380,100 })
+--~ 	self.UI:addElement(self.messagebox)
 
 --~ 	self.button = UIButton( { 100,100,100,33 } )
 --~ 	self.button:setRadius(6)
@@ -110,7 +110,7 @@ function Game:update(dt)
 			if enemy_timer <=0 and enemy_launcher then
 				self.enemyTask:launchEnemy()
 				enemy_timer = enemy_spawndelay
-				myprint("New enemy launched")
+--~ 				myprint("New enemy launched")
 			end
 		end
 
