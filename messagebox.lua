@@ -23,6 +23,8 @@ end
 
 UIList = class(function(self)
 	self.list=List()
+	self.oldX=love.mouse.getX()
+	self.oldY=love.mouse.getY()
 end)
 
 function UIList:addElement(element)
@@ -35,6 +37,7 @@ function UIList:removeElement(element)
 end
 
 function UIList:update(dt)
+	self:checkMouseOver()
 	local elem = self.list:getFirst()
 	while elem do
 		elem:update(dt)
@@ -76,6 +79,24 @@ function UIList:mouseReleased(x,y,button)
 	end
 end
 
+function UIList:checkMouseOver()
+	local x,y = love.mouse.getX(), love.mouse.getY()
+	local elem = self.list:getFirst()
+	while elem do
+		local rel_x = x - elem.rect[1]
+		local rel_y = y - elem.rect[2]
+		local isIn = (rel_x >= 0 and rel_x <= elem.rect[3] and rel_y>=0 and rel_y<=elem.rect[4])
+		local wasIn = (self.oldX >= elem.rect[1] and self.oldX <= elem.rect[1]+elem.rect[3] and
+			self.oldY >= elem.rect[2] and self.oldY<=elem.rect[2]+elem.rect[4])
+		if isIn and (not wasIn) then elem:mouseEntered(rel_x,rel_y) end
+		if (not isIn) and wasIn then elem:mouseExited(rel_x,rel_y) end
+		if isIn then elem:mouseOver(rel_x, rel_y) end
+		elem = self.list:getNext()
+	end
+	self.oldX = x
+	self.oldY = y
+end
+
 ------------------------------------------------------------
 UIElement = class( function(self, rect)
 	self.rect = rect or {10,10,300,50}
@@ -92,6 +113,16 @@ end
 
 function UIElement:mouseReleased(rel_x, rel_y, button)
 end
+
+function UIElement:mouseEntered(rel_x, rel_y)
+end
+
+function UIElement:mouseExited(rel_x, rel_y)
+end
+
+function UIElement:mouseOver(rel_x, rel_y)
+end
+
 
 ------------------------------------------------------------
 MessageBox = class( UIElement, function(self, rect)
@@ -252,6 +283,10 @@ function MessageBox:mouseReleased(rel_x,rel_y,button)
 end
 
 ------------------------------------------------------------
+-- mouseover
+-- blink
+-- click
+
 UIButton = class( UIElement, function(self, rect, text)
 	self._base.init(self, rect)
 	self.radius = 0
@@ -302,7 +337,15 @@ end
 function UIButton:mousePressed(rel_x, rel_y, button)
 end
 
-function UIElement:mouseReleased(rel_x, rel_y, button)
+function UIButton:mouseReleased(rel_x, rel_y, button)
+end
+
+function UIButton:mouseEntered(rel_x, rel_y)
+	self.color = {230,30,0}
+end
+
+function UIButton:mouseExited(rel_x,rel_y)
+	self.color = { 0, 100, 200 }
 end
 ---------------------------
 

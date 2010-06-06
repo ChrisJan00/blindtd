@@ -204,14 +204,6 @@ end
 function Game:mousepressed(x, y, button)
 
 	self.UI:mousePressed(x,y,button)
---~ 	local rel_x = x - self.messagebox.rect[1]
---~ 	local rel_y = y - self.messagebox.rect[2]
---~ 	if rel_x>=0 and rel_x<=self.messagebox.rect[3] and rel_y>=0 and rel_y<=self.messagebox.rect[4] then
-
---~ 		self.messagebox:mousePressed(rel_x, rel_y, button)
---~ 	else
-
---~ 	end
 
 	local dx,dy = self.map.side,self.map.side
 	local cx = math.floor(x/dx)+1
@@ -235,10 +227,5 @@ end
 
 function Game:mousereleased(x, y, button)
 	self.UI:mouseReleased(x,y,button)
---~ 	local rel_x = x - self.messagebox.rect[1]
---~ 	local rel_y = y - self.messagebox.rect[2]
---~ 	if self.messagebox.dragging then
---~ 		self.messagebox:mouseReleased(rel_x, rel_y, button)
---~ 	end
 end
 
