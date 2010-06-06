@@ -70,8 +70,8 @@ function Game:load()
 	self.actuatorList.actuatorMap:enter(self.player)
 
 	self.UI = UIList()
---~ 	self.messagebox = MessageBox({ 10,410,380,100 })
---~ 	self.UI:addElement(self.messagebox)
+	self.messagebox = MessageBox({ 10,410,380,100 })
+	self.UI:addElement(self.messagebox)
 
 --~ 	self.button = UIButton( { 100,100,100,33 } )
 --~ 	self.button:setRadius(6)
@@ -175,7 +175,8 @@ function Game:drawscanlines()
 end
 
 function myprint(t)
-	mytext=mytext..t.."\n"
+	if string.len(mytext)>0 then mytext = "\n"..mytext end
+	mytext=mytext..t
 --~ 	self.messagebox:addText(t)
 end
 
