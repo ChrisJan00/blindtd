@@ -49,6 +49,7 @@ function Task:iteration(max_delay)
 		self.ready = true
 		self.active = true
 		self.stopwatch = love.timer.getTime()
+		self.activity_stopwatch = self.stopwatch
 	end
 
 	local elapsed=0
