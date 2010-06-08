@@ -40,6 +40,7 @@ function love.load()
 	love.filesystem.require("player.lua")
 
 	love.filesystem.require("messagebox.lua")
+	love.filesystem.require("radar.lua")
 
 	-- Initialization
 	start_time = love.timer.getTime()

@@ -51,6 +51,25 @@ function ImageCache:blit(x,y)
 	love.graphics.draw(self.image,px,py)
 end
 
+-- grab a part of the screen
+function ImageCache:grab(x,y,width,height)
+	self.width = width
+	self.height = height
+	self.widthP2 = math.pow(2,(math.floor(math.log(self.width)/math.log(2))+1))
+	self.heightP2 = math.pow(2,(math.floor(math.log(self.height)/math.log(2))+1))
+	self.imagedata = love.image.newImageData(self.widthP2,self.heightP2)
+	self.imagedata:paste(love.graphics.newScreenshot(), 0, 0, x, y, width, height)
+	self.modified = true
+end
+
+-- alpha
+function ImageCache:setAlpha(alpha)
+	self.imagedata:mapPixel( function(x,y,r,g,b,a)
+		a=alpha
+		return r,g,b,a
+		end )
+end
+
 function ImageCache:erase()
 	self.imagedata = love.image.newImageData(self.width,self.height)
 	self.modified = true
@@ -185,14 +204,16 @@ function ImageCache:cutRegion(x1,y1,x2,y2)
 	local dx = x2-x1+1
 	local newImage = ImageCache(dx,dy)
 
-	local i,j
-	local r,g,b,a
-	for j=1,dy do
-		for i=1,dx do
-			r,g,b,a = self.imagedata:getPixel(i-1+x1,j-1+y1)
-			newImage.imagedata:setPixel(i-1,j-1,r,g,b,a)
-		end
-	end
+	-- todo: use paste!
+	newImage.imagedata:paste( self.imagedata, 0, 0, x1, y1, dx, dy )
+--~ 	local i,j
+--~ 	local r,g,b,a
+--~ 	for j=1,dy do
+--~ 		for i=1,dx do
+--~ 			r,g,b,a = self.imagedata:getPixel(i-1+x1,j-1+y1)
+--~ 			newImage.imagedata:setPixel(i-1,j-1,r,g,b,a)
+--~ 		end
+--~ 	end
 	newImage.modified = true
 	return newImage
 end

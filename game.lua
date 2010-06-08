@@ -73,6 +73,9 @@ function Game:load()
 	self.messagebox = MessageBox({ 10,410,380,100 })
 	self.UI:addElement(self.messagebox)
 
+--~ 	self.radar = Radar({20,20,200,200})
+--~ 	self.UI:addElement(self.radar)
+
 --~ 	self.button = UIButton( { 100,100,100,33 } )
 --~ 	self.button:setRadius(6)
 --~ 	self.button.text = "Accept"
@@ -97,6 +100,7 @@ end
 
 function Game:update(dt)
 	fps = fps*0.99 + 0.01 * 1.0 / dt
+--~ 	fps = 1/dt
 
 
 		-- 60 FPS
@@ -110,7 +114,7 @@ function Game:update(dt)
 			if enemy_timer <=0 and enemy_launcher then
 				self.enemyTask:launchEnemy()
 				enemy_timer = enemy_spawndelay
---~ 				myprint("New enemy launched")
+				myprint("New enemy launched")
 			end
 		end
 
@@ -137,7 +141,8 @@ function Game:draw()
 	self:drawscanlines()
 
 	if show_fps then
-		love.graphics.print(fps, 482, 20)
+		love.graphics.setColor(255,255,255)
+		love.graphics.print(fps, 2, 20)
 	end
 
 end
@@ -175,8 +180,7 @@ function Game:drawscanlines()
 end
 
 function myprint(t)
-	if string.len(mytext)>0 then mytext = "\n"..mytext end
-	mytext=mytext..t
+	mytext=mytext..t.."\n"
 --~ 	self.messagebox:addText(t)
 end
 
@@ -205,6 +209,14 @@ end
 function Game:mousepressed(x, y, button)
 
 	self.UI:mousePressed(x,y,button)
+--~ 	local rel_x = x - self.messagebox.rect[1]
+--~ 	local rel_y = y - self.messagebox.rect[2]
+--~ 	if rel_x>=0 and rel_x<=self.messagebox.rect[3] and rel_y>=0 and rel_y<=self.messagebox.rect[4] then
+
+--~ 		self.messagebox:mousePressed(rel_x, rel_y, button)
+--~ 	else
+
+--~ 	end
 
 	local dx,dy = self.map.side,self.map.side
 	local cx = math.floor(x/dx)+1
@@ -228,5 +240,10 @@ end
 
 function Game:mousereleased(x, y, button)
 	self.UI:mouseReleased(x,y,button)
+--~ 	local rel_x = x - self.messagebox.rect[1]
+--~ 	local rel_y = y - self.messagebox.rect[2]
+--~ 	if self.messagebox.dragging then
+--~ 		self.messagebox:mouseReleased(rel_x, rel_y, button)
+--~ 	end
 end
 
