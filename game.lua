@@ -28,7 +28,7 @@ tabledelay = 0
 listdelay = 0
 mytext=""
 fps = 0
-show_fps = false
+show_fps = true
 enemy_timer = 3
 enemy_spawndelay = 3
 enemy_launcher = true
@@ -73,7 +73,8 @@ function Game:load()
 	self.messagebox = MessageBox({ 10,410,380,100 })
 	self.UI:addElement(self.messagebox)
 
---~ 	self.radar = Radar({20,20,200,200})
+--~ 	self.radar = Radar({20,20,200,200}, self)
+--~ 	self.radar:addElement( self.player )
 --~ 	self.UI:addElement(self.radar)
 
 --~ 	self.button = UIButton( { 100,100,100,33 } )
@@ -113,6 +114,9 @@ function Game:update(dt)
 		if enemy_timer > 0 then enemy_timer = enemy_timer - dt
 			if enemy_timer <=0 and enemy_launcher then
 				self.enemyTask:launchEnemy()
+				if self.radar then
+					self.radar:addElement(self.enemyTask.enemies:getLast())
+				end
 				enemy_timer = enemy_spawndelay
 				myprint("New enemy launched")
 			end

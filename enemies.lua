@@ -241,12 +241,14 @@ Enemy = class( function( e, pos, task )
 		e.pos = pos
 		e.lastdir = 1
 		e.task = task
+		e.alive = true
 end)
 
 function Enemy:die()
 	self.task.scents:mark(self.pos,Blow_scent)
 	self.actuatorList.actmap:leave(self)
 	self.task.enemies:remove(self)
+	self.alive = false
 end
 
 

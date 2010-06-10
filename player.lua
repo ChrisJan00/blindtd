@@ -39,6 +39,7 @@ Player = class ( function (self, game)
 	self:setStartPos()
 	self.waitingOrders = List()
 	self.processingOrders = List()
+	self.alive = true
 end)
 
 function Player:setStartPos()
@@ -55,6 +56,7 @@ function Player:setStartPos()
 end
 
 function Player:die()
+	self.alive = false
 end
 
 function Player:update(dt)

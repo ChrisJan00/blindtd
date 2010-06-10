@@ -16,21 +16,27 @@
 --     You should have received a copy of the GNU General Public License
 --     along with Blind Tower Defense  If not, see <http://www.gnu.org/licenses/>.
 
-Radar = class( UIElement, function(self, rect)
+Radar = class( UIElement, function(self, rect, game)
 	self._base.init(self, rect)
 	self.angle = 0
+	self.oldangle = 0
 	-- degrees per second
 	self.angularSpeed = 90
+	self.fade = self.angularSpeed * math.log(1/255)/360
 --~ 	self.speedEstimation = 0
 	-- degrees
-	self.arc = 40
-	self.radius = math.max(rect[3],rect[4])
-	self.triangleCoords = {0,0,0,0,0,0}
+--~ 	self.arc = 40
+--~ 	self.radius = math.max(rect[3],rect[4])
+--~ 	self.triangleCoords = {0,0,0,0,0,0}
 	self.constant = math.log(1/255)/360
-	self.alpha=0
+--~ 	self.alpha=0
+	self.game = game
 	self:prepareImage()
+	self.list = List()
 
 end)
+
+-- ToDo: the radar should be a task!!!
 
 function Radar:prepareImage()
 
@@ -53,62 +59,81 @@ function Radar:prepareImage()
 				if x<c then angle=180 end
 				if x>=c then angle=0 end
 			end
+			angle = 360-angle
 			local a = 255 * math.exp(k*angle)
+			if a<15 then a=15 end
 			imagedata:setPixel(x,y,r,g,b,a)
 		end
 	end
 
 	-- store internally
 	self.image = love.graphics.newImage(imagedata)
+
+	-- also, compute dimensions for the individual elements
+	self.dx = self.rect[3]/self.game.map.hcells
+	self.dy = self.rect[4]/self.game.map.vcells
+	self.elemradius = math.min(self.dx,self.dy)/2
 end
 
 function Radar:update(dt)
 	local cx,cy = self.rect[1]+self.rect[3]/2, self.rect[2]+self.rect[4]/2
-	local oldangle = self.angle
+	self.oldangle = self.angle
 	self.angle = self.angle + self.angularSpeed * dt
---~ 	self.speedEstimation = 0.95 * self.speedEstimation + 0.05*self.angularSpeed*dt
---~ 	self.alpha = math.exp(self.speedEstimation * self.constant)
-	self.triangleCoords = {
-		cx,cy,
-		cx + math.cos(self.angle*math.pi/180)*self.radius, cy-math.sin(self.angle*math.pi/180)*self.radius,
-		cx + math.cos(oldangle*math.pi/180)*self.radius, cy-math.sin(oldangle*math.pi/180)*self.radius
-	}
+	if self.angle >= 360 then self.angle = self.angle - 360 end
 
 	local center = {self.rect[1]+self.rect[3]/2,self.rect[2]+self.rect[4]/2}
 	local tx,ty = -self.side/2,-self.side/2
 	local cosine = math.cos(self.angle*math.pi/180)
 	local sine = math.sin(self.angle*math.pi/180)
-	local rx,ry = (cosine*tx+sine*ty),(-sine*tx+cosine*ty)
+	local rx,ry = (cosine*tx-sine*ty),(sine*tx+cosine*ty)
 	self.corner = {rx+center[1],ry+center[2]}
 
+	local elem = self.list:getFirst()
+	while elem do
+		self:updateElem(elem, dt)
+		elem = self.list:getNext()
+	end
 end
 
--- todo:  the setAlpha method is very slow (because it evaluates a function for every pixel), dropping the framerate by 2.
--- since what we have at the end of the day is just a radial gradient that rotates around itself, we could actually pregenerate
--- the image using the proper formula and just blit it rotated each time.  ( I guess, subclassing ImageCache for that purpose)
+function Radar:updateElem( elem , dt)
+	-- dead? remove
+	if not elem.ref.alive then
+		list:removeCurrent()
+		return
+	end
 
--- still missing the actual enemies
--- the enemies would have an internal timer for the alpha value, instead of relying in this effect (because of the speed)
+	local x,y = elem.ref.pos[1]-self.game.map.hcells/2, elem.ref.pos[2]-self.game.map.vcells/2
 
---~ function Radar:draw()
+	local angle = math.atan(y/x) * 180 / math.pi
+	if x<0 then angle = 180+angle end
+	if angle<0 then angle = 360+angle end
+	if y==0 then
+		if x<0 then angle=180 end
+		if x>=0 then angle=0 end
+	end
+	elem.angle = angle
+	local oldangle = self.oldangle
+	if self.angle < self.oldangle then oldangle = oldangle - 360 end
+	if (self.angle >= elem.angle and oldangle < elem.angle) or
+	   (self.angle+360 >= elem.angle and oldangle+360 < elem.angle) then
+		elem.alpha = 255
+		elem.pos = {elem.ref.pos[1],elem.ref.pos[2]}
+	end
 
---~ 	love.graphics.setScissor(self.rect[1],self.rect[2],self.rect[3],self.rect[4])
+	elem.alpha = elem.alpha * math.exp(self.fade * dt)
+end
 
---~ 	love.graphics.setColor(0,0,0)
---~ 	love.graphics.rectangle("fill",self.rect[1],self.rect[2],self.rect[3],self.rect[4])
+function Radar:addElement( who )
+	local elem = {
+		ref = who,
+		pos = {who.pos[1],who.pos[2]},
+		angle = 0,
+		alpha = 0,
+	}
+	self.list:pushBack(elem)
+end
 
---~ 	love.graphics.setColorMode("replace")
---~ 	self.image:blit(self.rect[1],self.rect[2])
---~ 	love.graphics.setColorMode("modulate")
 
-
---~ 	love.graphics.setColor(128,255,128)
---~ 	love.graphics.triangle("fill",self.triangleCoords[1],self.triangleCoords[2],self.triangleCoords[3],self.triangleCoords[4],self.triangleCoords[5],self.triangleCoords[6])
-
---~ 	self.image:grab(self.rect[1],self.rect[2],self.rect[3],self.rect[4])
---~ 	self.image:setAlpha(255*self.alpha)
-
---~ 	love.graphics.setScissor()
 --~ end
 function Radar:draw()
 
@@ -118,17 +143,23 @@ function Radar:draw()
 	love.graphics.rectangle("fill",self.rect[1],self.rect[2],self.rect[3],self.rect[4])
 
 	love.graphics.setColorMode("replace")
-	love.graphics.draw(self.image,self.corner[1],self.corner[2],-self.angle*math.pi/180)
+	love.graphics.draw(self.image,self.corner[1],self.corner[2],self.angle*math.pi/180)
 	love.graphics.setColorMode("modulate")
 
-
---~ 	love.graphics.setColor(128,255,128)
---~ 	love.graphics.triangle("fill",self.triangleCoords[1],self.triangleCoords[2],self.triangleCoords[3],self.triangleCoords[4],self.triangleCoords[5],self.triangleCoords[6])
-
---~ 	self.image:grab(self.rect[1],self.rect[2],self.rect[3],self.rect[4])
---~ 	self.image:setAlpha(255*self.alpha)
+	local elem = self.list:getFirst()
+	while elem do
+		self:drawElement(elem)
+		elem = self.list:getNext()
+	end
 
 	love.graphics.setScissor()
+end
+
+function Radar:drawElement(elem)
+	love.graphics.setColor(200,255,200,elem.alpha)
+--~ 	love.graphics.setColor(200,255,200)
+	love.graphics.circle("fill",self.rect[1]+(elem.pos[1]-0.5)*self.dx,self.rect[2]+(elem.pos[2]-0.5)*self.dy, self.elemradius)
+	love.graphics.circle("fill",self.rect[1]+(elem.pos[1]-0.5)*self.dx,self.rect[2]+(elem.pos[2]-0.5)*self.dy, self.elemradius*0.6)
 end
 
 function Radar:mousePressed(rel_x, rel_y, button)
