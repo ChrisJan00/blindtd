@@ -214,8 +214,9 @@ function EnemyTask:updateEnemy()
 	self.game.actuatorList.actuatorMap:move( enemy, lastpos, enemy.pos )
 	if enemy.pos[1]==self.game.player.pos[1] and enemy.pos[2]==self.game.player.pos[2] then
 		touched = touched + 1
-		self.game.actuatorList.actuatorMap:leave( enemy )
-		self.enemies:remove(enemy)
+--~ 		self.game.actuatorList.actuatorMap:leave( enemy )
+--~ 		self.enemies:remove(enemy)
+		enemy:die()
 	end
 
 end
@@ -246,7 +247,7 @@ end)
 
 function Enemy:die()
 	self.task.scents:mark(self.pos,Blow_scent)
-	self.actuatorList.actmap:leave(self)
+	self.task.game.actuatorList.actuatorMap:leave(self)
 	self.task.enemies:remove(self)
 	self.alive = false
 end

@@ -98,7 +98,7 @@ end
 function Radar:updateElem( elem , dt)
 	-- dead? remove
 	if not elem.ref.alive then
-		list:removeCurrent()
+		self.list:removeCurrent()
 		return
 	end
 

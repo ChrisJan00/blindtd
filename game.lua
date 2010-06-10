@@ -28,7 +28,8 @@ tabledelay = 0
 listdelay = 0
 mytext=""
 fps = 0
-show_fps = true
+show_fps = false
+smooth_fps = true
 enemy_timer = 3
 enemy_spawndelay = 3
 enemy_launcher = true
@@ -100,8 +101,11 @@ end
 
 
 function Game:update(dt)
-	fps = fps*0.99 + 0.01 * 1.0 / dt
---~ 	fps = 1/dt
+	if smooth_fps then
+		fps = fps*0.99 + 0.01 * 1.0 / dt
+	else
+		fps = 1/dt
+	end
 
 
 		-- 60 FPS

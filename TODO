@@ -8,7 +8,7 @@
 - block doors <- needs player class, player order list
 
 -- ToDo: the radar should be a task!!!
--- check movetask, it seems to slow down..
+-- check movetask, it seems to slow down.. yes, it's because of the actuators I think
 
 
   - the actuator first processes all the abandons removing them from its own list of references to entities, then the enters
