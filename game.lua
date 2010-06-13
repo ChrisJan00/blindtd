@@ -109,7 +109,7 @@ function Game:update(dt)
 
 
 		-- 60 FPS
-		self.scheduler:iteration(1.0/40.0)
+		self.scheduler:iteration(1.0/60.0)
 
 		self.actuatorList:update(dt)
 		self.player:update(dt)
