@@ -1,15 +1,21 @@
 -- change resolution again, go back to former
--- map size defined as UI element, not as "ocupy maximum available"
 
--- player move as serialized task!
+
+-- map size defined as UI element, not as "ocupy maximum available"
+-- see MapCacher in map.lua
+
 
 - player: tasklist
 
 - block doors <- needs player class, player order list
+-- changes in routefinder:  consider (future) blocked doors
+-- avoid death points (because of machinegun)... but maybe not completely avoid, just put a very high cost to them, so other routes are prioritized,
+but they will be chosen if no other option is available.
+-- fix that the user can pass through the enemies without touching them... solution in order to avoid to parse all the list of enemies each iteration
+would be to have them marked in a map ( each cell contains the number of enemies that sit there), then the player would only have to check against the
+ map.
 
--- ToDo: the radar should be a task!!!
--- check movetask, it seems to slow down.. yes, it's because of the actuators I think
-
+-- (the movetask was not slowing down, but the fps was set to 40 instead of 60!) SOLVED
 
   - the actuator first processes all the abandons removing them from its own list of references to entities, then the enters
   - finally, the actuator performs an action depending on this list.  Examples:
