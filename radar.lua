@@ -22,17 +22,15 @@ Radar = class( UIElement, function(self, rect, game)
 	self.externalAngle = 0
 	self.oldangle = 0
 	-- degrees per second
-	self.angularSpeed = 90
+	self.angularSpeed = 180
 	self.fade = self.angularSpeed * math.log(1/255)/360
 	self.constant = math.log(1/255)/360
 	self.game = game
 	self:prepareImage()
 	self.list = List()
 	self.game.scheduler:addUntimedTask(RadarLoop(self))
-
 end)
 
--- ToDo: the radar should be a task!!!
 
 function Radar:prepareImage()
 
@@ -69,6 +67,11 @@ function Radar:prepareImage()
 	self.dx = self.rect[3]/self.game.map.hcells
 	self.dy = self.rect[4]/self.game.map.vcells
 	self.elemradius = math.min(self.dx,self.dy)/2
+
+	-- corner
+	local cx,cy = self.rect[1]+self.rect[3]/2, self.rect[2]+self.rect[4]/2
+	local side = - math.floor( 0.5 + math.sqrt(2) * math.max(self.rect[3],self.rect[4]) ) / 2
+	self.corner = {side+cx,side+cy}
 end
 
 function Radar:update(dt)

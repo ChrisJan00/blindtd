@@ -89,8 +89,8 @@ ActionScreen = class(UIElement, function(self, rect, game)
 	self.dx = self.rect[3]/self.game.map.hcells
 	self.dy = self.rect[4]/self.game.map.vcells
 
-	self.scentVisible = true
-	self.enemiesVisible = true
+	self.scentVisible = false
+	self.enemiesVisible = false
 	self.actuatorsVisible = true
 	self.playerVisible = true
 end)
@@ -138,14 +138,14 @@ function ActionScreen:mousePressed(rel_x, rel_y, button)
 
 end
 
-function ActionScreen:mouseReleased(rel_x, rel_y, button)
-end
+--~ function ActionScreen:mouseReleased(rel_x, rel_y, button)
+--~ end
 
-function ActionScreen:mouseEntered(rel_x, rel_y)
-end
+--~ function ActionScreen:mouseEntered(rel_x, rel_y)
+--~ end
 
-function ActionScreen:mouseExited(rel_x, rel_y)
-end
+--~ function ActionScreen:mouseExited(rel_x, rel_y)
+--~ end
 
-function ActionScreen:mouseOver(rel_x, rel_y)
-end
+--~ function ActionScreen:mouseOver(rel_x, rel_y)
+--~ end

@@ -242,9 +242,9 @@ function MessageBox:draw()
 
 	-- text
 	love.graphics.setScissor( self.rect[1]+self.borderWidth, self.rect[2]+self.borderWidth, self.rect[3]-self.borderWidth*3-self.barWidth, self.rect[4]-self.borderWidth )
+	love.graphics.setColorMode("modulate")
 	for i,line in ipairs(self.lines) do
 		love.graphics.setColor(100*self.fontshade[i],255*self.fontshade[i],200+55*self.fontshade[i])
-		love.graphics.setColorMode("modulate")
 		love.graphics.print(line,self.rect[1]+self.borderWidth,self.rect[2]+self.borderWidth+self.fontheight*i-self.scroll)
 	end
 	love.graphics.setScissor()

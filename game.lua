@@ -29,7 +29,7 @@ listdelay = 0
 mytext=""
 fps = 0
 fps_startcount = 10
-show_fps = true
+show_fps = false
 smooth_fps = true
 enemy_timer = 3
 enemy_spawndelay = 3
@@ -78,9 +78,12 @@ function Game:load()
 	self.actionScreen = ActionScreen( {55,5,420,420}, self )
 	self.UI:addElement(self.actionScreen)
 
---~ 	self.radar = Radar({20,20,200,200}, self)
---~ 	self.radar:addElement( self.player )
---~ 	self.UI:addElement(self.radar)
+	self.testlabel = FloatingLabel( {10,10,10,10} )
+	self.UI:addElement(self.testlabel)
+
+	self.radar = Radar({500,20,200,200}, self)
+	self.radar:addElement( self.player )
+	self.UI:addElement(self.radar)
 
 --~ 	self.button = UIButton( { 100,100,100,33 } )
 --~ 	self.button:setRadius(6)
@@ -150,7 +153,7 @@ function Game:draw()
 
 	if show_fps then
 		love.graphics.setColor(255,255,255)
-		love.graphics.print(fps, 2, 20)
+		love.graphics.print(math.floor(fps), 2, 20)
 	end
 
 end
