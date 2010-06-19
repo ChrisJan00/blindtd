@@ -49,7 +49,7 @@ function love.load()
 
 	-- Init graphics mode
 --~        screensize = { 640, 480 }
-	screensize = { 400,550 }
+	screensize = { 800,600 }
 	if not love.graphics.setMode( screensize[1], screensize[2], false, true, 0 ) then
 		quit()
 	end

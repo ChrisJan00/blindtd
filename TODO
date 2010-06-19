@@ -1,9 +1,3 @@
--- change resolution again, go back to former
-
-
--- map size defined as UI element, not as "ocupy maximum available"
--- see MapCacher in map.lua
-
 
 - player: tasklist
 

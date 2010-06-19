@@ -25,12 +25,17 @@ ActionScreenMapCacher = class(GenericVisitor,function(self, map, rect, container
 	end)
 
 function ActionScreenMapCacher:reset_loop()
-	self.i = 1
+	self.i = 0
 	self.j = 1
-	self.image:drawRectangle(0,0,self.rect[3],self.rect[4],{0,0,48,255})
 end
 
 function ActionScreenMapCacher:iteration(dt)
+	if self.i == 0 then
+		self.image:drawRectangle(0,0,self.rect[3],self.rect[4],{0,0,48,255})
+		self.i = 1
+		return false
+	end
+
 	if self.ready then return true end
 
 	love.graphics.setLineWidth(2)

@@ -28,7 +28,8 @@ tabledelay = 0
 listdelay = 0
 mytext=""
 fps = 0
-show_fps = false
+fps_startcount = 10
+show_fps = true
 smooth_fps = true
 enemy_timer = 3
 enemy_spawndelay = 3
@@ -71,10 +72,10 @@ function Game:load()
 	self.actuatorList.actuatorMap:enter(self.player)
 
 	self.UI = UIList()
-	self.messagebox = MessageBox({ 10,410,380,100 })
+	self.messagebox = MessageBox({ 10,460,780,130 })
 	self.UI:addElement(self.messagebox)
 
-	self.actionScreen = ActionScreen( {2,2,300,300}, self )
+	self.actionScreen = ActionScreen( {55,5,420,420}, self )
 	self.UI:addElement(self.actionScreen)
 
 --~ 	self.radar = Radar({20,20,200,200}, self)
@@ -104,6 +105,13 @@ end
 
 
 function Game:update(dt)
+	if fps_startcount > 0 then
+		fps_startcount = fps_startcount-1
+		if fps_startcount==0 then
+			fps = 1/dt
+		end
+	end
+
 	if smooth_fps then
 		fps = fps*0.99 + 0.01 * 1.0 / dt
 	else
