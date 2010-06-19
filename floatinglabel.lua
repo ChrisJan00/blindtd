@@ -18,9 +18,11 @@
 
 FloatingLabel = class(UIElement, function(self, rect, game)
 	self._base.init(self, rect)
-	self.text="test"
+	self.texts={"test","one","two"}
+	self.text = "test"
 	self.point = {self.rect[1]+3, self.rect[2]+3}
 	self.radius = 4
+	self.timer = 0
 end)
 
 function FloatingLabel:update(dt)
@@ -36,7 +38,9 @@ function FloatingLabel:draw()
 	-- then a diagonal line
 	love.graphics.line(self.point[1]+self.radius-1,self.point[2]+self.radius-1,p2[1],p2[2])
 	-- then a horizontal line
-	love.graphics.line(p2[1],p2[2],p2[1]+50,p2[2])
+	local font = love.graphics.getFont()
+	local len = font:getWidth(self.text)
+	love.graphics.line(p2[1],p2[2],p2[1]+len+2,p2[2])
 
 	-- then the text hanging from the line
 	love.graphics.setColorMode("modulate")

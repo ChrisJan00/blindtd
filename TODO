@@ -1,6 +1,17 @@
 
 - player: tasklist
 
+-- player hits enemies
+
+-- floatinglabel:
+-- the pointer blinks for a while when it appears
+-- the texts are written using a cursor (use the scissors plus a solid block) (maybe with a gradient for the whole line)
+-- the texts can be clickable!
+
+-- change the font, not to use the default any more
+-- suggestion: westminster font
+-- maybe different sizes? large, medium, small?  user-definable?  resolution-dependent?
+
 - block doors <- needs player class, player order list
 -- changes in routefinder:  consider (future) blocked doors
 -- avoid death points (because of machinegun)... but maybe not completely avoid, just put a very high cost to them, so other routes are prioritized,
