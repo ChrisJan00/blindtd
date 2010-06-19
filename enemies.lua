@@ -36,6 +36,7 @@ Prob_move = 0.98
 
 --------------------------------------------------
 ScentTask=class(GenericVisitor,function(scent, game)
+	scent.game = game
 	scent.hcells = game.map.hcells
 	scent.vcells = game.map.vcells
 	scent.current_map = {}
@@ -115,12 +116,17 @@ end
 
 
 function ScentTask:draw()
+	local x0 = self.game.actionScreen.rect[1]
+	local y0 = self.game.actionScreen.rect[2]
+	local dx = self.game.actionScreen.rect[3]/self.game.map.hcells
+	local dy = self.game.actionScreen.rect[4]/self.game.map.vcells
+
 	local i,j
 	for i=1,self.ref_map.hcells do
 		for j=1,self.ref_map.vcells do
 			if self.ref_map[i][j].corridor then
 
-				local dx,dy =  self.ref_map.side, self.ref_map.side
+--~ 				local dx,dy =  self.ref_map.side, self.ref_map.side
 
 				local fraction = self.current_map[i][j]*5
 				if fraction < 0 then
@@ -128,7 +134,7 @@ function ScentTask:draw()
 				else
 					love.graphics.setColor(fraction,0,0)
 				end
-				love.graphics.rectangle("fill" , (i-1)*dx+1,(j-1)*dy+1,dx-1,dy-1 )
+				love.graphics.rectangle("fill" , x0+(i-1)*dx+1,y0+(j-1)*dy+1,dx-1,dy-1 )
 
 			end
 		end
@@ -262,14 +268,19 @@ end
 
 
 function EnemyTask:drawEnemies()
+	local x0 = self.game.actionScreen.rect[1]
+	local y0 = self.game.actionScreen.rect[2]
+	local dx = self.game.actionScreen.rect[3]/self.game.map.hcells
+	local dy = self.game.actionScreen.rect[4]/self.game.map.vcells
+
 	local elem = self.enemies:getFirst()
 	while elem do
 
-		local dx,dy = self.scents.ref_map.side,self.scents.ref_map.side
+
 		local i,j = elem.pos[1],elem.pos[2]
 
 		love.graphics.setColor(0,200,0)
-		love.graphics.rectangle("fill" , (i-1)*dx+1,(j-1)*dy+1,dx-1,dy-1 )
+		love.graphics.rectangle("fill" , x0+(i-1)*dx+1,y0+(j-1)*dy+1,dx-1,dy-1 )
 
 		elem = self.enemies:getNext()
 	end

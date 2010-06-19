@@ -31,7 +31,6 @@ function love.load()
 	love.filesystem.require("linkedlists.lua")
 	love.filesystem.require("scheduler.lua")
 	love.filesystem.require("imagecache.lua")
-	love.filesystem.require("map.lua")
 	love.filesystem.require("routefinder.lua")
 	love.filesystem.require("game.lua")
 	love.filesystem.require("generator.lua")
@@ -41,6 +40,7 @@ function love.load()
 
 	love.filesystem.require("messagebox.lua")
 	love.filesystem.require("radar.lua")
+	love.filesystem.require("actionscreen.lua")
 
 	-- Initialization
 	start_time = love.timer.getTime()

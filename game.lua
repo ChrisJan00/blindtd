@@ -47,7 +47,7 @@ function Game:load()
 
 	self.scheduler = Scheduler()
 
-	self.scheduler:addUntimedTask(MapCacher(self.map,self.cachedmap))
+--~ 	self.scheduler:addUntimedTask(MapCacher(self.map,self.cachedmap))
 
 	----------- actuators
 	self.actuatorList = ActuatorList(self)
@@ -73,6 +73,9 @@ function Game:load()
 	self.UI = UIList()
 	self.messagebox = MessageBox({ 10,410,380,100 })
 	self.UI:addElement(self.messagebox)
+
+	self.actionScreen = ActionScreen( {2,2,300,300}, self )
+	self.UI:addElement(self.actionScreen)
 
 --~ 	self.radar = Radar({20,20,200,200}, self)
 --~ 	self.radar:addElement( self.player )
@@ -131,17 +134,6 @@ function Game:update(dt)
 end
 
 function Game:draw()
-
-	if self.cachedmap.cached_map then
-		love.graphics.setColor(255,160,0)
-		self.cachedmap.cached_map:blit()
-	end
-
-
-	self.scentTask:draw()
-	self.enemyTask:drawEnemies()
-	self.actuatorList:draw()
-	self:drawchar(self.player.pos)
 
 	self.UI:draw()
 
@@ -217,29 +209,6 @@ end
 function Game:mousepressed(x, y, button)
 
 	self.UI:mousePressed(x,y,button)
---~ 	local rel_x = x - self.messagebox.rect[1]
---~ 	local rel_y = y - self.messagebox.rect[2]
---~ 	if rel_x>=0 and rel_x<=self.messagebox.rect[3] and rel_y>=0 and rel_y<=self.messagebox.rect[4] then
-
---~ 		self.messagebox:mousePressed(rel_x, rel_y, button)
---~ 	else
-
---~ 	end
-
-	local dx,dy = self.map.side,self.map.side
-	local cx = math.floor(x/dx)+1
-	local cy = math.floor(y/dy)+1
-	local lx = x%dx
-	local ly = y%dy
-
-	if cx>self.map.hcells or cy>self.map.vcells then
-		-- outside of map: ignore
-		return
-	end
-
-	if self.map[cx][cy].corridor and button == "l" then
-		self.player:moveTo({cx,cy})
-	end
 
 
 end
@@ -248,10 +217,5 @@ end
 
 function Game:mousereleased(x, y, button)
 	self.UI:mouseReleased(x,y,button)
---~ 	local rel_x = x - self.messagebox.rect[1]
---~ 	local rel_y = y - self.messagebox.rect[2]
---~ 	if self.messagebox.dragging then
---~ 		self.messagebox:mouseReleased(rel_x, rel_y, button)
---~ 	end
 end
 

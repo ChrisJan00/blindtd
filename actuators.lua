@@ -305,28 +305,29 @@ function Door:canSee( who )
 end
 
 function Door:draw()
-	local dx,dy = self.game.map.side,self.game.map.side
+--~ 	local dx,dy = self.game.map.side,self.game.map.side
+	local x0 = self.game.actionScreen.rect[1]
+	local y0 = self.game.actionScreen.rect[2]
+	local dx = self.game.actionScreen.rect[3]/self.game.map.hcells
+	local dy = self.game.actionScreen.rect[4]/self.game.map.vcells
 	local i,j = self.pos[1],self.pos[2]
 	local sp = 0.5 - self.open_percent*0.5
+	love.graphics.setColor(160,0,160)
 	if self.orientation == 1 then
-		love.graphics.setColor(160,0,160)
-		love.graphics.line((i-1)*dx,(j-1)*dy,(i-1+sp)*dx,(j-1)*dy)
-		love.graphics.line((i-sp)*dx,(j-1)*dy,i*dx,(j-1)*dy)
+		love.graphics.line(x0+(i-1)*dx,y0+(j-1)*dy,x0+(i-1+sp)*dx,y0+(j-1)*dy)
+		love.graphics.line(x0+(i-sp)*dx,y0+(j-1)*dy,x0+i*dx,y0+(j-1)*dy)
 	end
 		if self.orientation == 2 then
-		love.graphics.setColor(160,0,160)
-		love.graphics.line((i-1)*dx,j*dy,(i-1+sp)*dx,j*dy)
-		love.graphics.line((i-sp)*dx,j*dy,i*dx,j*dy)
+		love.graphics.line(x0+(i-1)*dx,y0+j*dy,x0+(i-1+sp)*dx,y0+j*dy)
+		love.graphics.line(x0+(i-sp)*dx,y0+j*dy,x0+i*dx,y0+j*dy)
 	end
 		if self.orientation == 3 then
-		love.graphics.setColor(160,0,160)
-		love.graphics.line((i-1)*dx,(j-1)*dy,(i-1)*dx,(j-1+sp)*dy)
-		love.graphics.line((i-1)*dx,(j-sp)*dy,(i-1)*dx,j*dy)
+		love.graphics.line(x0+(i-1)*dx,y0+(j-1)*dy,x0+(i-1)*dx,y0+(j-1+sp)*dy)
+		love.graphics.line(x0+(i-1)*dx,y0+(j-sp)*dy,x0+(i-1)*dx,y0+j*dy)
 	end
 		if self.orientation == 4 then
-		love.graphics.setColor(160,0,160)
-		love.graphics.line(i*dx,(j-1)*dy,i*dx,(j-1+sp)*dy)
-		love.graphics.line(i*dx,(j-sp)*dy,i*dx,j*dy)
+		love.graphics.line(x0+i*dx,y0+(j-1)*dy,x0+i*dx,y0+(j-1+sp)*dy)
+		love.graphics.line(x0+i*dx,y0+(j-sp)*dy,x0+i*dx,y0+j*dy)
 	end
 end
 
