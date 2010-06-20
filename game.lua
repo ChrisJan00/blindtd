@@ -35,6 +35,7 @@ enemy_timer = 3
 enemy_spawndelay = 3
 enemy_launcher = true
 touched = 0
+desired_fps = 60.0
 
 --~ self = {}
 
@@ -123,7 +124,7 @@ function Game:update(dt)
 
 
 		-- 60 FPS
-		self.scheduler:iteration(1.0/60.0)
+		self.scheduler:iteration(1.0/desired_fps)
 
 		self.actuatorList:update(dt)
 		self.player:update(dt)
@@ -191,7 +192,7 @@ function Game:drawscanlines()
 end
 
 function myprint(t)
-	mytext=mytext..t.."\n"
+	mytext=mytext..t
 --~ 	self.messagebox:addText(t)
 end
 

@@ -65,7 +65,9 @@ function love.load()
 
 	-- Text
 --~ 	love.graphics.setFont("default")
-	love.graphics.setFont(16)
+--~ 	love.graphics.setFont(16)
+	love.graphics.setFont(love.graphics.newImageFont("computerliebe.png",
+	"!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ ") )
 
 	game = Game()
 	game:load()
@@ -81,6 +83,7 @@ end
 
 function love.draw()
 	game:draw()
+	love.graphics.setColorMode("modulate")
 end
 
 
