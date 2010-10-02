@@ -79,8 +79,8 @@ function Game:load()
 	self.actionScreen = ActionScreen( {55,5,420,420}, self )
 	self.UI:addElement(self.actionScreen)
 
-	self.testlabel = FloatingLabel( {10,10,10,10} )
-	self.UI:addElement(self.testlabel)
+--~ 	self.testlabel = FloatingLabel( {10,10,10,10} )
+--~ 	self.UI:addElement(self.testlabel)
 
 	self.radar = Radar({500,20,200,200}, self)
 	self.radar:addElement( self.player )
