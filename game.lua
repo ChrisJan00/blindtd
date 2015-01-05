@@ -21,21 +21,21 @@
 Game = {}
 
 function Game.load()
-	love.filesystem.require("map.lua")
-	love.filesystem.require("routefinder.lua")
+	love.filesystem.load("map.lua")()
+	love.filesystem.load("routefinder.lua")()
 	examplemap()
 --~ 	Map = generateMap()
 	Map = generateMapWRooms()
 
 	love.graphics.setBackgroundColor(0,0,48)
 	love.graphics.setColor(0,160,160)
-	love.graphics.setLine(2)
+	love.graphics.setLineWidth(2)
 
 	-- 1 edit
 	-- 2 move guy
 	-- 3 speed test
 	-- 4 scheduler test
-	gamemode = 4
+	gamemode = 3
 	step_counter = 0
 	step_size = 0.08
 	tabledelay = 0
@@ -43,10 +43,12 @@ function Game.load()
 
 	scheduler = Scheduler()
 	pathcont={ path={} }
+
+	calcnewroute_delay = 1
+	calcnewroute_timer = 0
 end
 
 function Game.update(dt)
-
 	if gamemode == 2 then
 		local do_step = false
 		local nsteps = 1
@@ -72,6 +74,12 @@ function Game.update(dt)
 	end
 
 	if gamemode == 3 then
+		calcnewroute_timer = calcnewroute_timer - dt
+		if calcnewroute_timer <= 0 then
+			calcnewroute_timer = (calcnewroute_timer + calcnewroute_delay) % calcnewroute_delay
+		else
+			return
+		end
 		local fx,fy,tx,ty
 		while true do
 			fx = math.random(Map.hcells)
@@ -135,11 +143,11 @@ function Game.draw()
 
 	if gamemode == 3 then
 		drawpath(mypath)
-		love.graphics.setColor(255,255,255,255)
-		local cutdelay = math.floor(tabledelay*10000)/10000
-		love.graphics.draw(cutdelay, 482,20)
-		local cutdelay = math.floor(listdelay*10000)/10000
-		love.graphics.draw(cutdelay, 482,40)
+		-- love.graphics.setColor(255,255,255,255)
+		-- local cutdelay = math.floor(tabledelay*10000)/10000
+		-- love.graphics.draw(cutdelay, 482,20)
+		-- local cutdelay = math.floor(listdelay*10000)/10000
+		-- love.graphics.draw(cutdelay, 482,40)
 	end
 
 	if gamemode == 4 then
@@ -154,12 +162,11 @@ function Game.draw()
 end
 
 function drawchar( c )
-
 	if not c then return end
 	local dx,dy = Cell.width,Cell.height
 
 	love.graphics.setColor(188,168,0)
-	love.graphics.rectangle( love.draw_fill , (c[1]-1)*dx+1,(c[2]-1)*dy+1,dx-1,dy-1 )
+	love.graphics.rectangle( "fill" , (c[1]-1)*dx+1,(c[2]-1)*dy+1,dx-1,dy-1 )
 end
 
 function drawpath( p )
@@ -168,7 +175,7 @@ function drawpath( p )
 	local dx,dy = Cell.width,Cell.height
 	for i,v in ipairs(p) do
 		love.graphics.setColor(188,168,i*255/table.getn(p))
-		love.graphics.rectangle( love.draw_fill , (v[1]-1)*dx+1,(v[2]-1)*dy+1,dx-1,dy-1 )
+		love.graphics.rectangle( "fill" , (v[1]-1)*dx+1,(v[2]-1)*dy+1,dx-1,dy-1 )
 	end
 end
 
@@ -176,7 +183,7 @@ function drawscanlines()
 	local i
 	local shalf = math.floor( screensize[2]/2)
 	love.graphics.setColor(0,0,0,128)
-	love.graphics.setLine(1,love.line_rough )
+	love.graphics.setLineWidth(1 )
 	for i=1,shalf do
 		love.graphics.line(0,i*2-1,screensize[1],i*2-1)
 	end

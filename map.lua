@@ -63,7 +63,7 @@ end
 end
 
 function drawmap(map)
-	love.graphics.setLine(2, love.line_rough)
+	love.graphics.setLineWidth(2)
 	local i,j
 --~ 	local dx=screensize[1]/Map.hcells
 --~ 	local dy=screensize[2]/Map.vcells
@@ -73,7 +73,7 @@ function drawmap(map)
 		for j=1,Map.vcells do
 			if  not map[i][j].corridor then
 				love.graphics.setColor(0,48,48)
-				love.graphics.rectangle( love.draw_fill , (i-1)*dx+1,(j-1)*dy+1,dx-1,dy-1 )
+				love.graphics.rectangle( "fill" , (i-1)*dx+1,(j-1)*dy+1,dx-1,dy-1 )
 			end
 			if map[i][j].corridor then
 				-- walls
